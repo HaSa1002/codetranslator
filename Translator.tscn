@@ -1,0 +1,283 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://Translator.gd" type="Script" id=1]
+[ext_resource path="res://output_btns.tres" type="ButtonGroup" id=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends AcceptDialog
+
+
+func _ready():
+	call_deferred(\"popup_centered\")
+"
+
+[node name="UI" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Editor" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+bug_report_popup = NodePath("../BugReport")
+
+[node name="Controls" type="HBoxContainer" parent="Editor"]
+margin_right = 1024.0
+margin_bottom = 40.0
+
+[node name="EscapeXML" type="CheckButton" parent="Editor/Controls"]
+margin_right = 155.0
+margin_bottom = 40.0
+group = ExtResource( 2 )
+text = "Escape XML"
+
+[node name="GDScript" type="CheckButton" parent="Editor/Controls"]
+visible = false
+margin_left = 159.0
+margin_right = 344.0
+margin_bottom = 40.0
+group = ExtResource( 2 )
+text = "Output GDScript"
+
+[node name="Typeless" type="CheckButton" parent="Editor/Controls"]
+visible = false
+margin_left = 159.0
+margin_right = 404.0
+margin_bottom = 40.0
+group = ExtResource( 2 )
+text = "Output Typeless GDScript"
+
+[node name="CSharp" type="CheckButton" parent="Editor/Controls"]
+margin_left = 159.0
+margin_right = 305.0
+margin_bottom = 40.0
+pressed = true
+group = ExtResource( 2 )
+text = "Output C#"
+
+[node name="BeDumb" type="CheckButton" parent="Editor/Controls"]
+visible = false
+margin_left = 309.0
+margin_right = 449.0
+margin_bottom = 40.0
+group = ExtResource( 2 )
+text = "Be Dumb"
+
+[node name="Regenerate" type="Button" parent="Editor/Controls"]
+margin_left = 309.0
+margin_right = 393.0
+margin_bottom = 40.0
+text = "Regenerate"
+
+[node name="ReportBug" type="Button" parent="Editor/Controls"]
+margin_left = 397.0
+margin_right = 479.0
+margin_bottom = 40.0
+text = "Report Bug"
+
+[node name="HSplitContainer" type="HSplitContainer" parent="Editor"]
+margin_top = 44.0
+margin_right = 1024.0
+margin_bottom = 600.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offset = 447
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Source" type="VBoxContainer" parent="Editor/HSplitContainer"]
+margin_right = 490.0
+margin_bottom = 556.0
+
+[node name="Label" type="Label" parent="Editor/HSplitContainer/Source"]
+margin_right = 490.0
+margin_bottom = 14.0
+text = "Source"
+align = 1
+valign = 1
+
+[node name="Source" type="TextEdit" parent="Editor/HSplitContainer/Source"]
+margin_top = 18.0
+margin_right = 490.0
+margin_bottom = 556.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "class_name Example, \"res://path.png\"
+extends Node
+var aes = AESContext.new()
+func _ready():
+	var key = \"My secret key!!!\" # Key must be either 16 or 32 bytes.
+	var data = \"My secret text!!\" # Data size must be multiple of 16 bytes, apply padding if needed.
+	var test := 1
+	# Encrypt ECB
+	aes.start(AESContext.MODE_ECB_ENCRYPT, key.to_utf8())
+	var encrypted = aes.update(data.to_utf8())
+	aes.finish()
+	# Decrypt ECB
+	aes.start(AESContext.MODE_ECB_DECRYPT, key.to_utf8())
+	var decrypted = aes.update(encrypted)
+	aes.finish()
+	
+	# Check ECB
+	assert(decrypted == data.to_utf8())
+	var iv = \"My secret iv!!!!\" # IV must be of exactly 16 bytes.
+	# Encrypt CBC
+	aes.start(AESContext.MODE_CBC_ENCRYPT, key.to_utf8(), iv.to_utf8())
+	encrypted = aes.update(data.to_utf8())
+	aes.finish()
+	# Decrypt CBC
+	aes.start(AESContext.MODE_CBC_DECRYPT, key.to_utf8(), iv.to_utf8())
+	decrypted = aes.update(encrypted)
+	aes.finish()
+	# Check CBC
+	assert(decrypted == data.to_utf8())
+	
+	if x:
+		print(\"x is true\")
+	elif x == 1:
+		print(\"x is 1\");
+	else:
+		print(\"x is not...\")
+"
+highlight_current_line = true
+syntax_highlighting = true
+show_line_numbers = true
+draw_tabs = true
+draw_spaces = true
+breakpoint_gutter = true
+fold_gutter = true
+highlight_all_occurrences = true
+smooth_scrolling = true
+caret_blink = true
+caret_blink_speed = 0.5
+
+[node name="VSplitContainer" type="VSplitContainer" parent="Editor/HSplitContainer"]
+margin_left = 502.0
+margin_right = 1024.0
+margin_bottom = 556.0
+split_offset = 300
+
+[node name="Output" type="VBoxContainer" parent="Editor/HSplitContainer/VSplitContainer"]
+margin_right = 522.0
+margin_bottom = 318.0
+
+[node name="Label" type="Label" parent="Editor/HSplitContainer/VSplitContainer/Output"]
+margin_right = 522.0
+margin_bottom = 14.0
+text = "Output"
+align = 1
+valign = 1
+
+[node name="Output" type="TextEdit" parent="Editor/HSplitContainer/VSplitContainer/Output"]
+margin_top = 18.0
+margin_right = 522.0
+margin_bottom = 318.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+readonly = true
+highlight_current_line = true
+syntax_highlighting = true
+show_line_numbers = true
+draw_tabs = true
+draw_spaces = true
+highlight_all_occurrences = true
+smooth_scrolling = true
+caret_blink = true
+caret_blink_speed = 0.5
+
+[node name="Warnings" type="VBoxContainer" parent="Editor/HSplitContainer/VSplitContainer"]
+margin_top = 330.0
+margin_right = 522.0
+margin_bottom = 556.0
+
+[node name="Label" type="Label" parent="Editor/HSplitContainer/VSplitContainer/Warnings"]
+margin_right = 522.0
+margin_bottom = 14.0
+text = "Warnings:"
+align = 1
+valign = 1
+
+[node name="Warnings" type="TextEdit" parent="Editor/HSplitContainer/VSplitContainer/Warnings"]
+margin_top = 18.0
+margin_right = 522.0
+margin_bottom = 226.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+readonly = true
+highlight_current_line = true
+syntax_highlighting = true
+show_line_numbers = true
+draw_tabs = true
+draw_spaces = true
+highlight_all_occurrences = true
+smooth_scrolling = true
+caret_blink = true
+caret_blink_speed = 0.5
+
+[node name="AcceptDialog" type="AcceptDialog" parent="."]
+visible = true
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -312.0
+margin_top = -139.0
+margin_right = 312.0
+margin_bottom = 139.0
+popup_exclusive = true
+window_title = "Attention"
+dialog_text = "This tool was written to ease the code documentation process in Godot. It translates GDScript to C# and can be used to escape XML Characters.
+
+However, there are likely bugs in this tool leading to wrong C# code or not completly idiomatic C# code. You should proofread the output and fix it. As this tool is still in development feel free to open issues with the input, output, and desired output.
+
+Again:
+PROOFREAD THE CODE! Don't blame me for wrong C# Code in your PRs.
+
+Current Version: 0.1 (Build 2020-08-02 1:24)
+Developed by Johannes Witt (HaSa1002)
+Source Code is in the Public Domain and available on GitHub
+"
+dialog_autowrap = true
+script = SubResource( 1 )
+
+[node name="BugReport" type="AcceptDialog" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -312.0
+margin_top = -139.0
+margin_right = 312.0
+margin_bottom = 126.0
+popup_exclusive = true
+window_title = "Bug Report"
+dialog_text = "The bug reports sometimes don't open correctly.
+Did your browser opend a new tab?
+
+If not you can copy the link to the clipboard.
+
+The link contains your used version, the source code, the output, and the warnings. Please don't forget to fill out the \"Expected Output\".
+
+Thank You <3
+
+GitHub Issues: %s
+Version: %s"
+dialog_autowrap = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+[connection signal="toggled" from="Editor/Controls/EscapeXML" to="Editor" method="_on_EscapeXML_toggled"]
+[connection signal="toggled" from="Editor/Controls/GDScript" to="Editor" method="_on_GDScript_toggled"]
+[connection signal="toggled" from="Editor/Controls/Typeless" to="Editor" method="_on_Typeless_toggled"]
+[connection signal="toggled" from="Editor/Controls/CSharp" to="Editor" method="_on_CSharp_toggled"]
+[connection signal="toggled" from="Editor/Controls/BeDumb" to="Editor" method="_on_BeDumb_toggled"]
+[connection signal="pressed" from="Editor/Controls/Regenerate" to="Editor" method="_on_Regenerate_pressed"]
+[connection signal="pressed" from="Editor/Controls/ReportBug" to="Editor" method="_on_ReportBug_pressed"]
+[connection signal="text_changed" from="Editor/HSplitContainer/Source/Source" to="Editor" method="_on_Source_text_changed"]
