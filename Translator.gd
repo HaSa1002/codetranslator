@@ -70,6 +70,13 @@ const comparison_operators = [
 const remap_methods = {
 	"assert": "Debug.Assert",
 	"print": "GD.Print",
+	"abs": "Mathf.Abs",
+	"acos": "Mathf.Acos",
+	"asin": "Mathf.Asin",
+	"atan": "Mathf.Atan",
+	"atan2": "Mathf.Atan2",
+	"min": "Mathf.Min",
+	
 }
 
 
@@ -169,7 +176,7 @@ func generate_csharp(source: String) -> String:
 			comment = l.split("#")[1]
 			l = l.split("#")[0]
 		if _is_declaration(l):
-			output += _parse_declaration(current_line, indent == 1, l, \
+			output += _parse_declaration(current_line, indent == 0, l, \
 				global_scope_vars, local_vars[indent], local_vars, usings)
 			l = ""
 		if _is_function_declaration(l):
@@ -463,9 +470,15 @@ func _var_in_local_vars(string: String, lsv) -> bool:
 func _is_remapped_method(method: String) -> bool:
 	return method in remap_methods
 
-
+## Returns true if string is presumably a constant
+## THIS_IS_A_CONSTANT
 func _is_constant(string: String) -> bool:
 	return string.casecmp_to(string.to_upper()) == 0
+
+
+## Returns true if string is "true" or "false"
+func _is_bool_exp(string: String) -> bool:
+	return string in ["true", "false"]
 
 
 ### 						Get Parser						  ###
@@ -505,6 +518,8 @@ func _get_type_and_default_value(string: String) -> Array:
 				else:
 					type = default_split[0]
 					default_value = ""
+			else:
+				type = split[1].strip_edges()
 	elif string.count("=") > 0:
 		var split := string.split("=")
 		if split.size() > 1:
@@ -546,7 +561,7 @@ func _get_function_retval(string: String) -> String:
 	var arrow := string.find("->") + 2
 	if arrow == 1:
 		return ""
-	var colon := string.find(":")
+	var colon := string.find_last(":")
 	if colon == -1:
 		colon += arrow
 	return string.substr(arrow, colon - arrow).strip_edges()
@@ -698,9 +713,9 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 				result += i[1]
 				previous = "string"
 				pass
-			"int", "float":
+			"int", "float", "bool":
 				result += i[1]
-				previous = "int/float"
+				previous = "int/float/bool"
 			"const":
 				if previous in place_dot:
 					result += "."
@@ -777,10 +792,12 @@ func _parse_statement(line: int, string: String) -> Array:
 		elif string.is_valid_float():
 			res.push_back(["float", string])
 			string = ""
-		
+		elif _is_bool_exp(string):
+			res.push_back(["bool", string])
+			string = ""
 		elif _is_method(string):
 			var method_brace_l = string.find("(")
-			var method_brace_r = string.find(")")
+			var method_brace_r = string.find_last(")")
 			var m = ["method", string.substr(0, method_brace_l), []]
 			var last_comma = method_brace_l + 1
 			var comma = string.find(",", last_comma)
@@ -789,13 +806,17 @@ func _parse_statement(line: int, string: String) -> Array:
 				if !s.empty():
 					m[2].push_back(_parse_statement(line, s))
 				last_comma = comma + 1
+				# Insert a(1, b(...), 2) detection logic here and afterwards
+				# delete the rstrip at the bottom
+				# use a comma stack here an process commas, and braces more often
+				var test_brace_l = string.find("(", last_comma)
 				comma = string.find(",", last_comma)
 				if comma < method_brace_r:
 					method_brace_r = string.find(")", comma)
 			var length = method_brace_r
 			if length != -1:
 				length -= last_comma
-			var s = string.substr(last_comma, length).strip_edges()
+			var s = string.substr(last_comma, length).strip_edges().rstrip(")")
 			if !s.empty():
 				m[2].push_back(_parse_statement(line, s))
 			if method_brace_r != -1:
