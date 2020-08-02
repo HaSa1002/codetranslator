@@ -628,6 +628,27 @@ func _get_remapped_method(method: String) -> String:
 	return remap_methods[method]
 
 
+## Returns the correct comma position after closing brace
+func _get_correct_comma(argstr: String) -> int:
+	var brace_stack := [true]
+	var end_brace := -1
+	var search_pos := argstr.find("(") + 1
+	while !brace_stack.empty():
+		var bl = argstr.find("(", search_pos)
+		var br = argstr.find(")", search_pos)
+		if bl != -1 && (bl < br || br == -1):
+			brace_stack.push_back(true)
+			search_pos = bl + 1
+		elif br != -1 && (br < bl || bl == -1):
+			brace_stack.pop_back()
+			search_pos = br + 1
+			end_brace = br
+		else: break
+	var comma = argstr.find(",", end_brace)
+	if comma == -1:
+		return argstr.length()
+	return comma
+
 
 ### 			Converters 				  ###
 # Converters take input and output Strings! #
@@ -834,18 +855,21 @@ func _parse_statement(line: int, string: String) -> Array:
 			var m = ["method", string.substr(0, method_brace_l), []]
 			var last_comma = method_brace_l + 1
 			var comma = string.find(",", last_comma)
+			
 			while comma != -1:
-				var s = string.substr(last_comma, comma - last_comma).strip_edges()
+				var s := string.substr(last_comma, comma - last_comma).strip_edges()
+				if s.find("(") != -1:
+					var correct = _get_correct_comma(string.substr(last_comma))
+					if correct != -1:
+						s = string.substr(last_comma, correct).strip_edges()
+						comma = last_comma + correct
 				if !s.empty():
 					m[2].push_back(_parse_statement(line, s))
 				last_comma = comma + 1
-				# Insert a(1, b(...), 2) detection logic here and afterwards
-				# delete the rstrip at the bottom
-				# use a comma stack here an process commas, and braces more often
-				var test_brace_l = string.find("(", last_comma)
 				comma = string.find(",", last_comma)
 				if comma < method_brace_r:
 					method_brace_r = string.find(")", comma)
+			
 			var length = method_brace_r
 			if length != -1:
 				length -= last_comma
