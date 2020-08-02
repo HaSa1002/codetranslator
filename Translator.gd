@@ -13,7 +13,7 @@ const VERSION = "0.1 (Build 2020-08-02 1:38)"
 
 
 ## Contains virtual functions that are automatically parsed as such
-const virtual_funcs = [
+const VIRTUAL_FUNCTIONS = [
 	# Object
 	"_init",
 	"_get",
@@ -43,7 +43,7 @@ const virtual_funcs = [
 
 
 ## Contains all GDScript assignment operators
-const assignment_operators = [
+const ASSIGNMENT_OPERATORS = [
 	"=",
 	"+=",
 	"-=",
@@ -56,7 +56,7 @@ const assignment_operators = [
 
 
 ## Contains all GDScript comparison operators
-const comparison_operators = [
+const COMPARISON_OPERATORS = [
 	"<",
 	">",
 	"==",
@@ -67,7 +67,7 @@ const comparison_operators = [
 
 
 ## Contains all method remaps (i.e. for methods using a namespace)
-const remap_methods = {
+const REMAP_METHODS = {
 	"assert": "Debug.Assert",
 	"print": "GD.Print",
 	"abs": "Mathf.Abs",
@@ -80,8 +80,42 @@ const remap_methods = {
 
 
 ## Contains the needed usings, when using the specified method
-const method_usings = {
+const METHOD_USINGS = {
 	"assert": "System.Diagnostics",
+}
+
+
+## Contains the builtin classes
+## value is how it should be handled
+## null -> normal
+## String -> value is used 1:1 for empty constructor
+## [String, String] -> 0: empty, 1: not empty
+## 
+const BUILTIN_CLASSES = {
+	"String": null,
+	"Vector2": null,
+	"Rect2": null,
+	"Vector3": null,
+	"Transform2D": "Transform2D.Identity",
+	"Plane": null,
+	"Quat": "Quat.Identity",
+	"AABB": null,
+	"Basis": "Basis.Identity",
+	"Transform": null,
+	"Color": null,
+	"NodePath": null,
+	"RID": null,
+	"Array": ["Godot.Collections.Array()", "Godot.Collections.Array{%s}"],
+	"Dictionary": ["Godot.Collections.Dictionary()", "Godot.Collections.Dictionary{%s}"],
+	# Maybe convert those to typesafe Godot Arrays?
+	"PackedByteArray": ["byte[]", "byte[] = %s"],
+	"PackedInt32Array": ["int[]", "int[] = %s"],
+	"PackedInt64Array": ["Int64[]", "Int64[] = %s"],
+	"PackedFloat32Array": ["float[]", "float[] = %s"],
+	"PackedFloat64Array": ["double[], double[] = %s"],
+	"PackedVector2Array": ["Vector2[], Vector2[] = %s"],
+	"PackedVector3Array": ["Vector3[]", "Vector3[] = %s"],
+	"PackedColorArray": ["Color[]", "Color[] = %s"],
 }
 
 
@@ -302,6 +336,10 @@ func _camelCase(string: String, keep_first_ := false) -> String:
 # depending on the detected content.			#
 # Detectors may be used on complete lines		#
 
+## Returns true if string is a built-in class
+func _is_builtin(string: String) -> bool:
+	return string.substr(0, string.find("(")).strip_edges() in BUILTIN_CLASSES
+
 
 ## Returns true on pass
 func _is_pass(string: String) -> bool:
@@ -386,12 +424,12 @@ func _is_private_function(string: String) -> bool:
 ## Returns true if function is a virtual function in Godot
 ## like _ready, _process, etc.
 func _is_overriding_virtual_function(string: String) -> bool:
-	return _is_private_function(string) && string.substr(5, string.find("(") - 5) in virtual_funcs
+	return _is_private_function(string) && string.substr(5, string.find("(") - 5) in VIRTUAL_FUNCTIONS
 
 
 ## Returns true if string is a virtual function name
 func _is_virtual(string: String) -> bool:
-	return _is_private(string) && string in virtual_funcs
+	return _is_private(string) && string in VIRTUAL_FUNCTIONS
 
 
 ## Returns true if string has an opening brace "("
@@ -412,9 +450,10 @@ func _is_string(string: String) -> bool:
 	return string[0] == "\"" && string[string.length() - 1] == "\""
 
 
-## Returns true if string contains .new(
+## Returns true if next method is .new(
 func _is_constructor(string: String) -> bool:
-	return string.find(".new(") != -1
+	var new_pos = string.find(".new(")
+	return new_pos != -1 && new_pos <= string.find(".")
 
 
 ## Returns true if string is a method
@@ -456,7 +495,7 @@ func _is_global_var(string: String, global_vars) -> bool:
 
 ## Returns true if string contains an assignment
 func _is_assignment(string: String) -> bool:
-	for op in assignment_operators:
+	for op in ASSIGNMENT_OPERATORS:
 		var pos = string.find(op)
 		if pos != -1:
 			return true
@@ -465,7 +504,7 @@ func _is_assignment(string: String) -> bool:
 
 ## Returns true if string contains an comparison
 func _is_comparison(string: String) -> bool:
-	for op in comparison_operators:
+	for op in COMPARISON_OPERATORS:
 		var pos = string.find(op)
 		if pos != -1:
 			return true
@@ -479,7 +518,7 @@ func _var_in_local_vars(string: String, lsv) -> bool:
 
 ## Returns true if method is remapped in C# (i.e. using a namespace)
 func _is_remapped_method(method: String) -> bool:
-	return method in remap_methods
+	return method in REMAP_METHODS
 
 ## Returns true if string is presumably a constant
 ## THIS_IS_A_CONSTANT
@@ -625,7 +664,7 @@ func _get_assignment(string: String) -> String:
 ## Returns the C# variant of the the method
 func _get_remapped_method(method: String) -> String:
 	assert(_is_remapped_method(method))
-	return remap_methods[method]
+	return REMAP_METHODS[method]
 
 
 ## Returns the correct comma position after closing brace
@@ -725,6 +764,8 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 					result += gsv[i[1]]
 				elif _var_in_local_vars(i[1], lsv):
 					result += _get_var_in_local_vars(i[1], lsv)
+				elif i[1] == "self":
+					result += "this"
 				else:
 					# We have to assume, that the variable is declared in a parent class
 					var is_private := _is_private(i[1])
@@ -733,11 +774,26 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 					result += _pascal(i[1], is_private)
 				previous = "var"
 				pass
+			"constructor":
+				if previous in place_dot:
+					result += "."
+				result += "new %s(" % i[1]
+				var j = 0
+				for args in i[2][0][2]:
+					j += 1
+					result += _convert_statement(line, args, gsv, lsv, usings, false)
+					if j < i[2][0][2].size():
+						result += ", "
+				result += ")"
 			"method":
 				if previous in place_dot:
 					result += "."
+				
 				if _is_remapped_method(i[1]):
 					result += _get_remapped_method(i[1]) + "("
+				elif _is_builtin(i[1]):
+					# We have a constructor
+					result += "new %s(" % i[1]
 				else:
 					result += _pascal(i[1], _is_private(i[1])) + "("
 				_parse_using(i[1], usings)
@@ -849,6 +905,18 @@ func _parse_statement(line: int, string: String) -> Array:
 		elif _is_pass(string):
 			res.push_back(["pass"])
 			string = ""
+		elif _is_constructor(string):
+			var dot = string.find(".")
+			var end = _get_correct_comma(string.substr(dot + 4))
+			res.push_back([
+				"constructor",
+				string.substr(0, dot).strip_edges(),
+				_parse_statement(line, string.substr(dot + 4, end))
+				])
+			if string.length() == dot + end + 6:
+				string = ""
+			else:
+				string = string.substr(dot + end + 6)
 		elif _is_method(string):
 			var method_brace_l = string.find("(")
 			var method_brace_r = string.find_last(")")
@@ -926,7 +994,7 @@ func _parse_variable_d(string: String) -> Array:
 				elif val.is_valid_float():
 					result[1] = "float"
 					result[3] = true
-				elif _is_string(val) || _is_constructor(val):
+				elif _is_string(val) || _is_constructor(val) || _is_builtin(val):
 					result[1] = "var" # We use var here, since a string is safely deducted
 		result[2] = val
 	return result
@@ -935,7 +1003,7 @@ func _parse_variable_d(string: String) -> Array:
 ## Returns the assignment expression as
 ## [left side, operator, right side]
 func _split_assignment(string: String) -> Array:
-	for op in assignment_operators:
+	for op in ASSIGNMENT_OPERATORS:
 		var pos = string.find(op)
 		if pos != -1:
 			return [string.substr(0, pos).strip_edges(), op, string.substr(pos + op.length())]
@@ -946,7 +1014,7 @@ func _split_assignment(string: String) -> Array:
 ## Returns the comparison expression as
 ## [left side, operator, right side]
 func _split_comparison(string: String) -> Array:
-	for op in comparison_operators:
+	for op in COMPARISON_OPERATORS:
 		var pos = string.find(op)
 		if pos != -1:
 			return [string.substr(0, pos).strip_edges(), op, string.substr(pos + op.length())]
@@ -956,9 +1024,9 @@ func _split_comparison(string: String) -> Array:
 
 ## Adds using to the using dict, if method requires it
 func _parse_using(method: String, usings):
-	if method in method_usings:
-		if !method_usings[method] in usings:
-			usings.push_back(method_usings[method])
+	if method in METHOD_USINGS:
+		if !METHOD_USINGS[method] in usings:
+			usings.push_back(METHOD_USINGS[method])
 
 
 
