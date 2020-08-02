@@ -76,7 +76,6 @@ const remap_methods = {
 	"atan": "Mathf.Atan",
 	"atan2": "Mathf.Atan2",
 	"min": "Mathf.Min",
-	
 }
 
 
@@ -138,10 +137,11 @@ func generate_csharp(source: String) -> String:
 	var usings := [
 		"Godot",
 	]
-	for line in source.split("\n", false):
+	for line in source.split("\n"):
 		var l: String = line.strip_edges()
 		current_line += 1
 		var indent = line.length() - line.strip_edges(true, false).length()
+		
 		if collect_file_scope:
 			if indent != 0:
 				collect_file_scope = false
@@ -150,6 +150,8 @@ func generate_csharp(source: String) -> String:
 					collected_scope += l + "\n"
 					continue
 				elif _is_comment(l):
+					pass
+				elif l.empty():
 					pass
 				else:
 					collect_file_scope = false
@@ -167,6 +169,9 @@ func generate_csharp(source: String) -> String:
 			local_vars[indent] = {}
 		depth = indent
 		output += "\t".repeat(indent)
+		if l.empty() || _is_pass(l):
+			output += "\n"
+			continue
 		if _is_comment(l):
 			# directly convert line into comment and continue
 			output += "//" + l.substr(1)
@@ -296,6 +301,12 @@ func _camelCase(string: String, keep_first_ := false) -> String:
 # Detectors are only meant to return a bool,	#
 # depending on the detected content.			#
 # Detectors may be used on complete lines		#
+
+
+## Returns true on pass
+func _is_pass(string: String) -> bool:
+	return string.begins_with("pass")
+
 
 ## Returns true if complete line is a comment
 ## # Comment
@@ -480,10 +491,22 @@ func _is_constant(string: String) -> bool:
 func _is_bool_exp(string: String) -> bool:
 	return string in ["true", "false"]
 
+## Return true if string begins with "return"
+func _is_return(string: String) -> bool:
+	return string.begins_with("return")
+
+
+
+
 
 ### 						Get Parser						  ###
 # Get Parser take snippets of a line and return them processed	#
 # Those parser should not generate complete lines				#
+
+
+## Returns return value of string
+func _get_return_value(string: String) -> String:
+	return string.substr(5).strip_edges()
 
 ## Returns type of variable declaration
 func _get_type_from_td(string: String) -> String:
@@ -656,9 +679,8 @@ func _convert_file_scope_to_cs(line: int, string: String) -> String:
 		warn(line, "Expected a base class")
 	else:
 		extends_class = extends_line.substr(8).strip_edges()
-	if is_tool:
-		warn(line, "Tool scripts are not supported in C#")
-	return "public class " + cname + " : " + extends_class + "\n"
+	var tool_line = "[Tool]\n" if is_tool else ""
+	return tool_line + "public class " + cname + " : " + extends_class + "\n"
 
 
 ## Converts the output of _parse_statement into C# Code
@@ -672,6 +694,9 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 	var previous = ""
 	for i in statement:
 		match i[0]:
+			"pass":
+				place_semicolon = false
+				pass
 			"var":
 				if previous in place_dot:
 					result += "."
@@ -730,6 +755,8 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 	if place_semicolon:
 		result += ";"
 	return result
+
+
 
 
 
@@ -794,6 +821,12 @@ func _parse_statement(line: int, string: String) -> Array:
 			string = ""
 		elif _is_bool_exp(string):
 			res.push_back(["bool", string])
+			string = ""
+		elif _is_return(string):
+			res.push_back(["return", _parse_statement(line, _get_return_value(string))])
+			string = ""
+		elif _is_pass(string):
+			res.push_back(["pass"])
 			string = ""
 		elif _is_method(string):
 			var method_brace_l = string.find("(")
