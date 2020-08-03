@@ -253,7 +253,7 @@ However, there are likely bugs in this tool leading to wrong C# code or not comp
 Again:
 PROOFREAD THE CODE! Don't blame me for wrong C# Code in your PRs.
 
-Current Version: 0.1 (Build 2020-08-02 1:24)
+Current Version: %s
 Developed by Johannes Witt (HaSa1002)
 Source Code is in the Public Domain and available on GitHub
 "

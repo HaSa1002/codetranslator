@@ -9,7 +9,7 @@ extends VBoxContainer
 
 
 const GITHUB_URL = "https://github.com/HaSa1002/codetranslator/"
-const VERSION = "0.2 (Build 2020-08-03 2:03)"
+const VERSION = "0.2 (Build 2020-08-03 2:39)"
 
 
 ## Contains virtual functions that are automatically parsed as such
@@ -124,6 +124,7 @@ export var about_popup : NodePath
 export var paste_bug : NodePath
 
 func _ready():
+	get_node(about_popup).dialog_text = get_node(about_popup).dialog_text % VERSION
 	$Controls/Paste.visible = OS.has_feature("JavaScript")
 	pass # Replace with function body.
 
