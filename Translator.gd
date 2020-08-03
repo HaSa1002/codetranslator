@@ -336,6 +336,7 @@ func _pascal(string : String, keep_first_ := false) -> String:
 	result.erase(result.length() - 1, 1)
 	return result
 
+
 ## Converts string to camelCase
 ##
 ## @param string
@@ -356,6 +357,10 @@ func _camelCase(string: String, keep_first_ := false) -> String:
 ## Returns true if string is a built-in class
 func _is_builtin(string: String) -> bool:
 	return string.substr(0, string.find("(")).strip_edges() in BUILTIN_CLASSES
+
+
+func _is_get_node(string: String) -> bool:
+	return string.begins_with("$")
 
 
 ## Returns true on pass
@@ -706,6 +711,16 @@ func _get_correct_comma(argstr: String) -> int:
 	return comma
 
 
+func _get_get_node(string: String) -> String:
+	var parent := string.find_last("..")
+	if parent == -1:
+		parent = 0
+	else:
+		parent += 2
+	var last_dot := string.find(".", parent)
+	return string.substr(0, last_dot)
+
+
 ### 			Converters 				  ###
 # Converters take input and output Strings! #
 
@@ -765,7 +780,8 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 	var place_dot := [
 		"var",
 		"method",
-		"string"
+		"string",
+		"get_node",
 	]
 	var result := ""
 	var previous = ""
@@ -832,6 +848,10 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 				result += _convert_statement(line, i[1], gsv, lsv, usings, false) + " %s " % i[2] + \
 						_convert_statement(line, i[3], gsv, lsv, usings, false)
 				previous = "assignment/comparison"
+			"get_node":
+				result += "GetNode<?TYPE?>(\"%s\")" % i[1]
+				warn(line, "Cannot deduct type of get_node")
+				previous = "get_node"
 			"string":
 				result += i[1]
 				previous = "string"
@@ -944,6 +964,10 @@ func _parse_statement(line: int, string: String) -> Array:
 		elif _is_pass(string):
 			res.push_back(["pass"])
 			string = ""
+		elif _is_get_node(string):
+			var node_path = _get_get_node(string.right(1))
+			res.push_back(["get_node", node_path])
+			string = string.substr(node_path.length() + 2)
 		elif _is_constructor(string):
 			var dot = string.find(".")
 			var end = _get_correct_comma(string.substr(dot + 4))
