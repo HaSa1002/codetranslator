@@ -226,7 +226,7 @@ func generate_csharp(source: String) -> String:
 			comment = l.split("#")[1]
 			l = l.split("#")[0]
 		if _is_declaration(l):
-			var is_global_var = indent == 1 && is_global_scope || indent == 0 && !is_global_scope
+			var is_global_var = indent == 1 && is_global_scope
 			output += _parse_declaration(current_line, is_global_var, l, \
 				global_scope_vars, local_vars[indent], local_vars, usings)
 			l = ""
