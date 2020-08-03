@@ -89,7 +89,7 @@ const METHOD_USINGS = {
 ## value is how it should be handled
 ## null -> normal
 ## String -> value is used 1:1 for empty constructor
-## [String, String] -> 0: empty, 1: not empty
+## [String, String] -> 0: type, 1: not empty
 ## 
 const BUILTIN_CLASSES = {
 	"String": null,
@@ -105,17 +105,17 @@ const BUILTIN_CLASSES = {
 	"Color": null,
 	"NodePath": null,
 	"RID": null,
-	"Array": ["Godot.Collections.Array()", "Godot.Collections.Array{%s}"],
-	"Dictionary": ["Godot.Collections.Dictionary()", "Godot.Collections.Dictionary{%s}"],
+	"Array": ["Godot.Collections.Array", "Godot.Collections.Array{%s}"],
+	"Dictionary": ["Godot.Collections.Dictionary", "Godot.Collections.Dictionary{%s}"],
 	# Maybe convert those to typesafe Godot Arrays?
-	"PackedByteArray": ["byte[]", "byte[] = %s"],
-	"PackedInt32Array": ["int[]", "int[] = %s"],
-	"PackedInt64Array": ["Int64[]", "Int64[] = %s"],
-	"PackedFloat32Array": ["float[]", "float[] = %s"],
-	"PackedFloat64Array": ["double[], double[] = %s"],
-	"PackedVector2Array": ["Vector2[], Vector2[] = %s"],
-	"PackedVector3Array": ["Vector3[]", "Vector3[] = %s"],
-	"PackedColorArray": ["Color[]", "Color[] = %s"],
+	"PackedByteArray": ["byte[]", "byte[] {%s}"],
+	"PackedInt32Array": ["int[]", "int[] {%s}"],
+	"PackedInt64Array": ["Int64[]", "Int64[] {%s}"],
+	"PackedFloat32Array": ["float[]", "float[] {%s}"],
+	"PackedFloat64Array": ["double[], double[] {%s}"],
+	"PackedVector2Array": ["Vector2[], Vector2[] {%s}"],
+	"PackedVector3Array": ["Vector3[]", "Vector3[] {%s}"],
+	"PackedColorArray": ["Color[]", "Color[] {%s}"],
 }
 
 
@@ -174,7 +174,11 @@ func generate_csharp(source: String) -> String:
 	var local_vars := {0: {}} #contains dict for each indent level, index by indent
 	var usings := [
 		"Godot",
+		"System",
 	]
+	var braces := 0
+	var is_multiline := false
+	source = source.replace("    ", "\t")
 	for line in source.split("\n"):
 		var l: String = line.strip_edges()
 		current_line += 1
@@ -197,16 +201,19 @@ func generate_csharp(source: String) -> String:
 				var f_scope = _convert_file_scope_to_cs(current_line, collected_scope)
 				is_global_scope = !f_scope.empty()
 				output += f_scope
-		
-		indent += 1 if is_global_scope else 0
-		if indent < depth:
-			output += "\t".repeat(depth - 1) + "}\n"
-			local_vars.erase(depth)
-		elif indent > depth:
-			output += "\t".repeat(depth) + "{\n"
-			local_vars[indent] = {}
-		depth = indent
-		output += "\t".repeat(indent)
+		if !is_multiline:
+			indent += 1 if is_global_scope else 0
+			if indent < depth:
+				braces -= 1
+				output += "\t".repeat(braces) + "}\n"
+				local_vars.erase(depth)
+			elif indent > depth:
+				output += "\t".repeat(braces) + "{\n"
+				local_vars[indent] = {}
+				braces += 1
+			depth = indent
+			output += "\t".repeat(indent)
+		is_multiline = false
 		if l.empty() || _is_pass(l):
 			output += "\n"
 			continue
@@ -219,7 +226,8 @@ func generate_csharp(source: String) -> String:
 			comment = l.split("#")[1]
 			l = l.split("#")[0]
 		if _is_declaration(l):
-			output += _parse_declaration(current_line, indent == 0, l, \
+			var is_global_var = indent == 1 && is_global_scope || indent == 0 && !is_global_scope
+			output += _parse_declaration(current_line, is_global_var, l, \
 				global_scope_vars, local_vars[indent], local_vars, usings)
 			l = ""
 		if _is_function_declaration(l):
@@ -277,17 +285,22 @@ func generate_csharp(source: String) -> String:
 		if _is_else(l):
 			output += "else"
 			l = ""
+		if l.ends_with("\\"):
+			is_multiline = true
+			l = l.left(l.length() - 2).strip_edges()
 		if !l.empty():
 			output += _convert_statement(current_line, _parse_statement(current_line, l), \
-					global_scope_vars, local_vars, usings)
+					global_scope_vars, local_vars, usings, !is_multiline)
 		if !comment.empty():
 			output += " //" + comment
 			comment = ""
 		
-		output += "\n"
+		if !is_multiline:
+			output += "\n"
 		#print("[%d] " % current_line, l)
-	if is_global_scope:
-		output += "}\n"
+	while braces > 0:
+		output += "\t".repeat(braces - 1) + "}\n"
+		braces -= 1
 	var usings_str := ""
 	for using in usings:
 		usings_str += "using %s;\n" % using
@@ -792,22 +805,26 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 			"method":
 				if previous in place_dot:
 					result += "."
-				
+				var method = ""
 				if _is_remapped_method(i[1]):
-					result += _get_remapped_method(i[1]) + "("
+					method = _get_remapped_method(i[1]) + "(%s)"
 				elif _is_builtin(i[1]):
 					# We have a constructor
-					result += "new %s(" % i[1]
+					method = _convert_builtin(i[1], !i[2].empty())
 				else:
-					result += _pascal(i[1], _is_private(i[1])) + "("
+					method = _pascal(i[1], _is_private(i[1])) + "(%s)"
 				_parse_using(i[1], usings)
 				var j = 0
+				var arg_str = ""
 				for args in i[2]:
 					j += 1
-					result += _convert_statement(line, args, gsv, lsv, usings, false)
+					arg_str += _convert_statement(line, args, gsv, lsv, usings, false)
 					if j < i[2].size():
-						result += ", "
-				result += ")"
+						arg_str += ", "
+				if method.find("%s") == -1:
+					result += method
+				else:
+					result += method % arg_str
 				
 				previous = "method"
 				pass
@@ -839,6 +856,22 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 
 
 
+func _convert_builtin(type: String, has_args := false, as_type := false) -> String:
+	type = type.substr(0, type.find("(")).strip_edges()
+	if BUILTIN_CLASSES[type] == null:
+		return type if as_type else "new "+type+"(%s)"
+	elif BUILTIN_CLASSES[type] is Array:
+		if as_type:
+			return BUILTIN_CLASSES[type][0]
+		elif has_args:
+			return "new " + BUILTIN_CLASSES[type][1]
+		else:
+			return "new " + BUILTIN_CLASSES[type][1] % ""
+	else:
+		if has_args:
+			return type if as_type else "new "+type+"(%s)"
+		else:
+			return BUILTIN_CLASSES[type]
 
 
 ### 			Parser				  ###
@@ -868,6 +901,8 @@ func _parse_declaration(line: int, global_scope: bool, string: String, gsv, lsvi
 			var vname =  _camelCase(info[0], false)
 			lsvi[info[0]] = vname
 			info[0] = vname
+	if _is_builtin(info[1]):
+		info[1] = _convert_builtin(info[1], false, true)
 	result += info[1] + " " + info[0]
 	if info[2] != null:
 		result += " = "
