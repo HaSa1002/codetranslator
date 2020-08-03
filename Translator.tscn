@@ -26,6 +26,8 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 bug_report_popup = NodePath("../BugReport")
+about_popup = NodePath("../AcceptDialog")
+paste_bug = NodePath("../PasteBug")
 
 [node name="Controls" type="HBoxContainer" parent="Editor"]
 margin_right = 1024.0
@@ -80,6 +82,18 @@ margin_left = 397.0
 margin_right = 479.0
 margin_bottom = 40.0
 text = "Report Bug"
+
+[node name="Paste" type="Button" parent="Editor/Controls"]
+margin_left = 483.0
+margin_right = 621.0
+margin_bottom = 40.0
+text = "Paste doesn't work?"
+
+[node name="About" type="Button" parent="Editor/Controls"]
+margin_left = 625.0
+margin_right = 675.0
+margin_bottom = 40.0
+text = "About"
 
 [node name="HSplitContainer" type="HSplitContainer" parent="Editor"]
 margin_top = 44.0
@@ -222,7 +236,6 @@ caret_blink = true
 caret_blink_speed = 0.5
 
 [node name="AcceptDialog" type="AcceptDialog" parent="."]
-visible = true
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -273,6 +286,25 @@ dialog_autowrap = true
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="PasteBug" type="AcceptDialog" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -214.0
+margin_top = -132.5
+margin_right = 214.0
+margin_bottom = 132.5
+popup_exclusive = true
+window_title = "Paste Bug Workaround"
+dialog_text = "Because of security reasons, it is in some browsers not possible to access the clipboard in Godot. You have two options:
+1) Use a chromium based browser (Chrome, Chromium, Edge)
+2) Navigate to Edit -> Paste and then press Ctrl + V"
+dialog_autowrap = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
 [connection signal="toggled" from="Editor/Controls/EscapeXML" to="Editor" method="_on_EscapeXML_toggled"]
 [connection signal="toggled" from="Editor/Controls/GDScript" to="Editor" method="_on_GDScript_toggled"]
 [connection signal="toggled" from="Editor/Controls/Typeless" to="Editor" method="_on_Typeless_toggled"]
@@ -280,4 +312,6 @@ __meta__ = {
 [connection signal="toggled" from="Editor/Controls/BeDumb" to="Editor" method="_on_BeDumb_toggled"]
 [connection signal="pressed" from="Editor/Controls/Regenerate" to="Editor" method="_on_Regenerate_pressed"]
 [connection signal="pressed" from="Editor/Controls/ReportBug" to="Editor" method="_on_ReportBug_pressed"]
+[connection signal="pressed" from="Editor/Controls/Paste" to="Editor" method="_on_Paste_pressed"]
+[connection signal="pressed" from="Editor/Controls/About" to="Editor" method="_on_About_pressed"]
 [connection signal="text_changed" from="Editor/HSplitContainer/Source/Source" to="Editor" method="_on_Source_text_changed"]

@@ -9,7 +9,7 @@ extends VBoxContainer
 
 
 const GITHUB_URL = "https://github.com/HaSa1002/codetranslator/"
-const VERSION = "0.1 (Build 2020-08-02 1:38)"
+const VERSION = "0.2 (Build 2020-08-03 2:03)"
 
 
 ## Contains virtual functions that are automatically parsed as such
@@ -120,8 +120,11 @@ const BUILTIN_CLASSES = {
 
 
 export var bug_report_popup : NodePath
+export var about_popup : NodePath
+export var paste_bug : NodePath
 
 func _ready():
+	$Controls/Paste.visible = OS.has_feature("JavaScript")
 	pass # Replace with function body.
 
 
@@ -1162,4 +1165,13 @@ func _brp_custom_action(action, link):
 
 
 func _on_BugReport_custom_action(action, extra_arg_0):
+	pass # Replace with function body.
+
+
+func _on_Paste_pressed():
+	get_node(paste_bug).popup_centered()
+
+
+func _on_About_pressed():
+	get_node(about_popup).popup_centered()
 	pass # Replace with function body.
