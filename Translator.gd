@@ -916,14 +916,20 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 				result += i[1]
 				previous = "const"
 			"return":
-				result += "return " + _convert_statement(line, i[1], gsv, lsv, usings, false);
+				result += "return " + _convert_statement(line, i[1], gsv, lsv, usings, false)
 				previous = "return"
+			"array":
+				var elements := ""
+				for e in i[1]:
+					elements += _convert_statement(line, e, gsv, lsv, usings, false) + ", "
+				elements.erase(elements.length() - 2, 2)
+				result += BUILTIN_CLASSES["Array"][1] % elements
 			"?":
 				warn(line, "Expression %s is unrecognized!" % i[1])
 				pass
 			var other:
-				print("type %s is unrecognized! Content:" % other, i)
-				warn(line, "type %s is unrecognized!" % other)
+				print("type %s is unrecognized! Content:" % other[0], i)
+				warn(line, "type %s is unrecognized!" % other[0])
 	if place_semicolon:
 		result += ";"
 	return result
@@ -955,7 +961,7 @@ func _convert_builtin(type: String, has_args := false, as_type := false) -> Stri
 ## Parses a variable declaration and output converted code
 func _parse_declaration(line: int, global_scope: bool, string: String, gsv, lsvi, lsv, usings) -> String:
 	var result := ""
-	if global_scope: # Don't include access modifier in global scope
+	if global_scope: # Include access modifier in global scope
 		result += "private " if _is_private_var(string) else "public "
 	var info := _parse_variable_d(string)
 	if info[1] == null:
@@ -1036,6 +1042,22 @@ func _parse_statement(line: int, string: String) -> Array:
 			else:
 				string.erase(0, end + 3)
 			printt("SUB!", string)
+		elif _is_array(string):
+			var end = string.find("]")
+			var last_comma := 1
+			var comma := string.find(",")
+			var elements := []
+			while comma != -1:
+				var debug := string.substr(last_comma, comma - last_comma)
+				elements.push_back(_parse_statement(line, string.substr(last_comma, comma - last_comma)))
+				last_comma = comma + 1
+				comma = string.find(",", last_comma)
+			elements.push_back(_parse_statement(line, string.substr(last_comma, end - last_comma)))
+			res.push_back(["array", elements])
+			if end == -1:
+				string = ""
+			else:
+				string.erase(0, end + 1)
 		elif _is_get_node(string):
 			var node_path = _get_get_node(string.right(1))
 			res.push_back(["get_node", node_path])
@@ -1105,11 +1127,12 @@ func _parse_statement(line: int, string: String) -> Array:
 			var dot = string.find(".")
 			var bracket = string.find("[")
 			#var space = string.find (" ")
-			var var_end = dot if dot < bracket && dot != -1 else bracket
+			var use_dot = (dot < bracket && dot != -1) || (bracket == -1)
+			var var_end = dot if use_dot else bracket
 			#var_end = space if space < var_end && space != -1 else var_end
 			res.push_back(["var", string.substr(0, var_end)])
 			if var_end != -1:
-				string = string.substr(var_end + (1 if dot < bracket && dot != -1 else 0))
+				string = string.substr(var_end + (1 if use_dot else 0))
 			else:
 				string = ""
 	if !string.empty():
