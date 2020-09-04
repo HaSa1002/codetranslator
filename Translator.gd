@@ -42,6 +42,18 @@ const VIRTUAL_FUNCTIONS = [
 ]
 
 
+## Contains all GDScript math operators
+const MATH_OPERATORS = [
+	"+",
+	"-",
+	"*",
+	"/",
+	"%",
+	"&",
+	"|",
+]
+
+
 ## Contains all GDScript assignment operators
 const ASSIGNMENT_OPERATORS = [
 	"=",
@@ -263,6 +275,7 @@ func generate_csharp(source: String) -> String:
 					output += "?NAME?"
 				else:
 					output += arg[0]
+					local_vars[indent][arg[0]] = arg[0]
 				
 				if arg[2] == null:
 					pass # We ensure below is a String... Hacky tho
@@ -524,6 +537,15 @@ func _is_assignment(string: String) -> bool:
 	return false
 
 
+## Returns true if string contains a mathematical expression
+func _is_math(string: String) -> bool:
+	for op in MATH_OPERATORS:
+		var pos = string.find(op)
+		if pos != -1:
+			return true
+	return false
+
+
 ## Returns true if string contains an comparison
 func _is_comparison(string: String) -> bool:
 	for op in COMPARISON_OPERATORS:
@@ -557,6 +579,29 @@ func _is_return(string: String) -> bool:
 	return string.begins_with("return")
 
 
+## Returns true if string begins with [ and has no commas
+func _is_subscription(string: String) -> bool:
+	return string.begins_with("[") and string.find(",") == -1
+
+
+## Returns true if string begins with [
+func _is_array(string: String) -> bool:
+	return string.begins_with("[")
+
+
+## Returns true if there is a slash in the string
+## We really don't have any chance to securly distingish a property
+## string from a normal subscription string
+func _is_probably_property_string(string: String) -> bool:
+	return string.begins_with("[") && string.find("/") != -1
+
+
+## Returns true if string begins with class
+func _is_class(string: String) -> bool:
+	return string.begins_with("class")
+
+
+
 
 
 
@@ -567,7 +612,7 @@ func _is_return(string: String) -> bool:
 
 ## Returns return value of string
 func _get_return_value(string: String) -> String:
-	return string.substr(5).strip_edges()
+	return string.substr(6).strip_edges()
 
 ## Returns type of variable declaration
 func _get_type_from_td(string: String) -> String:
@@ -681,6 +726,12 @@ func _get_var_in_local_vars(string: String, lsv) -> String:
 ## Returns the right side of an assignment
 func _get_assignment(string: String) -> String:
 	return _split_assignment(string)[2].strip_edges()
+
+
+## Returns the math expression
+func _get_math(string: String) -> Array:
+	assert(false) # Unimplemented
+	return []
 
 
 ## Returns the C# variant of the the method
@@ -844,7 +895,7 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 				
 				previous = "method"
 				pass
-			"assignment", "comparison":
+			"assignment", "comparison", "math":
 				result += _convert_statement(line, i[1], gsv, lsv, usings, false) + " %s " % i[2] + \
 						_convert_statement(line, i[3], gsv, lsv, usings, false)
 				previous = "assignment/comparison"
@@ -864,6 +915,9 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 					result += "."
 				result += i[1]
 				previous = "const"
+			"return":
+				result += "return " + _convert_statement(line, i[1], gsv, lsv, usings, false);
+				previous = "return"
 			"?":
 				warn(line, "Expression %s is unrecognized!" % i[1])
 				pass
@@ -964,6 +1018,24 @@ func _parse_statement(line: int, string: String) -> Array:
 		elif _is_pass(string):
 			res.push_back(["pass"])
 			string = ""
+		elif _is_probably_property_string(string):
+			var end = string.find("]")
+			end -= 1 if end != -1 else 0
+			res.push_back(["property", string.substr(1, end)])
+			warn(line, "Possible Property. Please use .get or .set instead")
+			if end == -1:
+				string = ""
+			else:
+				string.erase(0, end + 3)
+		elif _is_subscription(string):
+			var end = string.find("]")
+			end -= 2 if end != -1 else 0
+			res.push_back(["subscription", _parse_statement(line, string.substr(1, end))])
+			if end == -1:
+				string = ""
+			else:
+				string.erase(0, end + 3)
+			printt("SUB!", string)
 		elif _is_get_node(string):
 			var node_path = _get_get_node(string.right(1))
 			res.push_back(["get_node", node_path])
@@ -1011,6 +1083,11 @@ func _parse_statement(line: int, string: String) -> Array:
 				method_brace_r += 2
 			string.erase(0, method_brace_r)
 			res.push_back(m)
+		elif _is_math(string):
+			var math = _split_math(string)
+			res.push_back(["math", _parse_statement(line, math[0]),
+					 math[1], _parse_statement(line, math[2])])
+			string = ""
 		elif _is_comparison(string):
 			var comparison = _split_comparison(string)
 			res.push_back(["comparison", _parse_statement(line, comparison[0]),
@@ -1025,10 +1102,14 @@ func _parse_statement(line: int, string: String) -> Array:
 			res.push_back(["const", string])
 			string = ""
 		elif _is_var(string):
-			var var_end = string.find(".")
+			var dot = string.find(".")
+			var bracket = string.find("[")
+			#var space = string.find (" ")
+			var var_end = dot if dot < bracket && dot != -1 else bracket
+			#var_end = space if space < var_end && space != -1 else var_end
 			res.push_back(["var", string.substr(0, var_end)])
 			if var_end != -1:
-				string = string.substr(var_end + 1)
+				string = string.substr(var_end + (1 if dot < bracket && dot != -1 else 0))
 			else:
 				string = ""
 	if !string.empty():
@@ -1061,6 +1142,17 @@ func _parse_variable_d(string: String) -> Array:
 					result[1] = "var" # We use var here, since a string is safely deducted
 		result[2] = val
 	return result
+
+
+## Returns the assignment expression as
+## [left side, operator, right side]
+func _split_math(string: String) -> Array:
+	for op in MATH_OPERATORS:
+		var pos = string.find(op)
+		if pos != -1:
+			return [string.substr(0, pos).strip_edges(), op, string.substr(pos + op.length())]
+	assert(false)
+	return []
 
 
 ## Returns the assignment expression as
