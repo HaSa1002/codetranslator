@@ -249,6 +249,8 @@ func generate_csharp(source: String) -> String:
 				output += "private "
 			else:
 				output += "public "
+			if _is_static_function(l):
+				output += "static "
 			var retval := _get_function_retval(l)
 			if retval.empty():
 				warn(current_line, "No return value provided. Assuming void. Use -> RETVAL to specify")
@@ -443,7 +445,7 @@ func _is_typed_declaration(string: String) -> bool:
 
 ## Returns true if string starts with func
 func _is_function_declaration(string: String) -> bool:
-	return string.begins_with("func")
+	return string.begins_with("func") || string.begins_with("static")
 
 
 ## Returns true if function does not start with an underscore
@@ -454,6 +456,11 @@ func _is_public_function(string: String) -> bool:
 ## Returns true if functions starts with an underscore
 func _is_private_function(string: String) -> bool:
 	return _is_function_declaration(string) && string.substr(5).begins_with("_")
+
+
+## Returns true if function is static func
+func _is_static_function(string: String):
+	return _is_function_declaration(string) && string.begins_with("static")
 
 
 ## Returns true if function is a virtual function in Godot
@@ -680,9 +687,10 @@ func _get_var_name_from_d(string: String) -> String:
 
 ## Returns function name from declaration
 func _get_function_name_from_d(string: String) -> String:
+	var begin = 12 if _is_static_function(string) else 5
 	if string.count("(") == 0:
-		return string.substr(5)
-	return string.substr(5, string.find("(") - 5).strip_edges()
+		return string.substr(begin)
+	return string.substr(begin, string.find("(") - begin).strip_edges()
 
 
 ## Returns the return value of function declaration
