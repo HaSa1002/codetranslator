@@ -275,7 +275,7 @@ func generate_csharp(source: String) -> String:
 					output += "?NAME?"
 				else:
 					output += arg[0]
-					local_vars[indent][arg[0]] = arg[0]
+					local_vars[indent][arg[0]] = [arg[0], arg[1]]
 				
 				if arg[2] == null:
 					pass # We ensure below is a String... Hacky tho
@@ -716,11 +716,11 @@ func _get_function_arguments(string: String) -> Array:
 
 ## Returns the var converted if declared in a local block
 ## Returns empty string if not found
-func _get_var_in_local_vars(string: String, lsv) -> String:
+func _get_var_in_local_vars(string: String, lsv) -> Array:
 	for indent in lsv:
 		if lsv[indent].has(string):
 			return lsv[indent][string]
-	return ""
+	return []
 
 
 ## Returns the right side of an assignment
@@ -845,9 +845,9 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 				if previous in place_dot:
 					result += "."
 				if i[1] in gsv:
-					result += gsv[i[1]]
+					result += gsv[i[1]][0]
 				elif _var_in_local_vars(i[1], lsv):
-					result += _get_var_in_local_vars(i[1], lsv)
+					result += _get_var_in_local_vars(i[1], lsv)[0]
 				elif i[1] == "self":
 					result += "this"
 				else:
@@ -971,23 +971,26 @@ func _parse_declaration(line: int, global_scope: bool, string: String, gsv, lsvi
 	var result := ""
 	if global_scope: # Include access modifier in global scope
 		result += "private " if _is_private_var(string) else "public "
-	var info := _parse_variable_d(string)
+	var info := _parse_variable_d(string, gsv, lsv)
 	if info[1] == null:
 		info[1] = "?VAR?"
 		warn(line, "Type of declaration is unknown")
 	if info[3]:
-		warn(line, "Type is inferred from a number. This is error-prone. Set the type explicit!")
+		if info[3] == 1:
+			warn(line, "Type is inferred from a number. This is error-prone. Set the type explicit!")
+		elif info[3] == 2:
+			warn(line, "Type is dependent on a variable. This is can lead to unexpected changes.")
 	if info[0] == null:
 		warn(line, "Expected variable name")
 		info[0] = "?NAME?"
 	else:
 		if global_scope:
 			var vname = _pascal(info[0], _is_private(info[0]))
-			gsv[info[0]] = vname
+			gsv[info[0]] = [vname, info[1]]
 			info[0] = vname
 		else:
 			var vname =  _camelCase(info[0], false)
-			lsvi[info[0]] = vname
+			lsvi[info[0]] = [vname, info[1]]
 			info[0] = vname
 	if _is_builtin(info[1]):
 		info[1] = _convert_builtin(info[1], false, true)
@@ -1151,7 +1154,7 @@ func _parse_statement(line: int, string: String) -> Array:
 
 ## Parses variable declaration and does basic type guessing
 ## Structure: [name, type, default_value, type_unsafe:bool]
-func _parse_variable_d(string: String) -> Array:
+func _parse_variable_d(string: String, gsv, lsv) -> Array:
 	var result = [null, null, null, false]
 	if _is_typed_declaration(string) && !_get_type_from_td(string).empty():
 		result[1] = _get_type_from_td(string)
@@ -1165,12 +1168,18 @@ func _parse_variable_d(string: String) -> Array:
 				# We try to deduct the type of the assignment
 				if val.is_valid_integer():
 					result[1] = "int"
-					result[3] = true
+					result[3] = 1
 				elif val.is_valid_float():
 					result[1] = "float"
-					result[3] = true
+					result[3] = 1
 				elif _is_string(val) || _is_constructor(val) || _is_builtin(val):
 					result[1] = "var" # We use var here, since a string is safely deducted
+				elif _is_local_var(val, lsv):
+					result[1] = _get_var_in_local_vars(val, lsv)[1]
+					result[3] = 2
+				elif _is_global_var(val, gsv):
+					result[2] = gsv[val][1]
+					result[3] = 2
 		result[2] = val
 	return result
 
