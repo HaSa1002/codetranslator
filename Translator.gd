@@ -940,12 +940,18 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 					elements += _convert_statement(line, e, gsv, lsv, usings, false) + ", "
 				elements.erase(elements.length() - 2, 2)
 				result += BUILTIN_CLASSES["Array"][1] % elements
+			"property":
+				result += "[%s]" % i[1]
+				previous = "property"
+			"subscription":
+				result += "[%s]" % _convert_statement(line, i[1], gsv, lsv, usings, false)
+				previous = "property/subscription"
 			"?":
 				warn(line, "Expression %s is unrecognized!" % i[1])
 				pass
 			var other:
-				print("type %s is unrecognized! Content:" % other[0], i)
-				warn(line, "type %s is unrecognized!" % other[0])
+				print("type '%s' is unrecognized! Content:" % other, i)
+				warn(line, "type '%s' is unrecognized! This is a Bug and should be reported" % other)
 	if place_semicolon:
 		result += ";"
 	return result
@@ -1020,7 +1026,8 @@ func _parse_declaration(line: int, global_scope: bool, string: String, gsv, lsvi
 ## Parses ordinary code and tokenizes it
 func _parse_statement(line: int, string: String) -> Array:
 	var res := []
-	var i = 0
+	var i := 0
+	var skip_math := false
 	while !string.empty():
 		string = string.strip_edges()
 		i += 1
@@ -1054,13 +1061,12 @@ func _parse_statement(line: int, string: String) -> Array:
 				string.erase(0, end + 3)
 		elif _is_subscription(string):
 			var end = string.find("]")
-			end -= 2 if end != -1 else 0
+			end -= 1 if end != -1 else 0
 			res.push_back(["subscription", _parse_statement(line, string.substr(1, end))])
 			if end == -1:
 				string = ""
 			else:
 				string.erase(0, end + 3)
-			printt("SUB!", string)
 		elif _is_array(string):
 			var end = string.find("]")
 			var last_comma := 1
@@ -1124,10 +1130,18 @@ func _parse_statement(line: int, string: String) -> Array:
 				method_brace_r += 2
 			string.erase(0, method_brace_r)
 			res.push_back(m)
-		elif _is_math(string):
+		elif !skip_math && _is_math(string):
 			var math = _split_math(string)
-			res.push_back(["math", _parse_statement(line, math[0]),
-					 math[1], _parse_statement(line, math[2])])
+			var data = ["math", _parse_statement(line, math[0]),
+					 math[1], _parse_statement(line, math[2])]
+			for d in data[1]:
+				if d[0] == "subscription":
+					skip_math = true;
+					break
+			if skip_math:
+				continue
+			res.push_back(data)
+			print(res[-1])
 			string = ""
 		elif _is_comparison(string):
 			var comparison = _split_comparison(string)
@@ -1154,6 +1168,8 @@ func _parse_statement(line: int, string: String) -> Array:
 				string = string.substr(var_end + (1 if use_dot else 0))
 			else:
 				string = ""
+		# Reset skipper
+		skip_math = false
 	if !string.empty():
 		# Something unspecified is left (Likely a problem of this func not parsing everything)
 		res.push_back(["?", string])
