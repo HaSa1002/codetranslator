@@ -881,11 +881,19 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 				else:
 					method = _pascal(i[1], _is_private(i[1])) + "(%s)"
 				_parse_using(i[1], usings)
+				var is_connect = i[1].begins_with("connect")
+				var connect_same_method = false
 				var j = 0
 				var arg_str = ""
 				for args in i[2]:
 					j += 1
-					arg_str += _convert_statement(line, args, gsv, lsv, usings, false)
+					var part = _convert_statement(line, args, gsv, lsv, usings, false)
+					if is_connect:
+						if j == 2:
+							connect_same_method = part.begins_with("this");
+						elif j == 3 && connect_same_method:
+							part = "nameof(%s)" % _pascal(part.substr(1, part.length() - 2))
+					arg_str += part
 					if j < i[2].size():
 						arg_str += ", "
 				if method.find("%s") == -1:
