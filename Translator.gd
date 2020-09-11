@@ -771,13 +771,13 @@ func _get_correct_comma(argstr: String) -> int:
 
 
 func _get_get_node(string: String) -> String:
-	var parent := string.find_last("..")
-	if parent == -1:
-		parent = 0
-	else:
-		parent += 2
-	var last_dot := string.find(".", parent)
-	return string.substr(0, last_dot)
+	print(string)
+	if string.begins_with("\""):
+		return string.substr(0, string.find("\"", 1) + 1)
+	var dot := string.find(".", 0)
+	var space := string.find(" ", 0)
+	var end = dot if (dot < space && dot != -1) || space == -1 else space
+	return string.substr(0, end)
 
 
 ### 			Converters 				  ###
