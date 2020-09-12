@@ -83,6 +83,8 @@ const REMAP_METHODS = {
 	"assert": "Debug.Assert",
 	"print": "GD.Print",
 	"prints": "GD.PrintS",
+	"load": "GD.load",
+	"preload": "GD.load",
 	"abs": "Mathf.Abs",
 	"acos": "Mathf.Acos",
 	"asin": "Mathf.Asin",
@@ -1249,8 +1251,6 @@ func _parse_statement(line: int, string: String) -> Array:
 			if !s.empty():
 				m[2].push_back(_parse_statement(line, s))
 			string = string.substr(m[1].length() + brace_content.length() + 2)
-			if string.begins_with("."):
-				string.erase(0,1)
 			res.push_back(m)
 		elif _is_group(string):
 			var position := 0
@@ -1316,6 +1316,9 @@ func _parse_statement(line: int, string: String) -> Array:
 			else:
 				string = ""
 		# Reset skipper
+		if string.begins_with("."):
+			# Workaround. Maybe put into attribute?
+			string.erase(0, 1)
 		skip_math = false
 	if !string.empty():
 		# Something unspecified is left (Likely a problem of this func not parsing everything)
