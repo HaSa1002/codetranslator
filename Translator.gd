@@ -844,56 +844,57 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 	]
 	var result := ""
 	var previous = ""
-	for i in statement:
-		match i[0]:
+	var i := 0
+	for s in statement:
+		match s[0]:
 			"pass":
 				place_semicolon = false
 				pass
 			"var":
 				if previous in place_dot:
 					result += "."
-				if i[1] in gsv:
-					result += gsv[i[1]][0]
-				elif _var_in_local_vars(i[1], lsv):
-					result += _get_var_in_local_vars(i[1], lsv)[0]
-				elif i[1] == "self":
+				if s[1] in gsv:
+					result += gsv[s[1]][0]
+				elif _var_in_local_vars(s[1], lsv):
+					result += _get_var_in_local_vars(s[1], lsv)[0]
+				elif s[1] == "self":
 					result += "this"
 				else:
 					# We have to assume, that the variable is declared in a parent class
-					var is_private := _is_private(i[1])
+					var is_private := _is_private(s[1])
 					if is_private:
-						warn(line, "Variable %s looks private, but is not declared in this file" % i[1])
-					result += _pascal(i[1], is_private)
+						warn(line, "Variable %s looks private, but is not declared in this file" % s[1])
+					result += _pascal(s[1], is_private)
 				previous = "var"
 				pass
 			"constructor":
 				if previous in place_dot:
 					result += "."
-				result += "new %s(" % i[1]
+				result += "new %s(" % s[1]
 				var j = 0
-				for args in i[2][0][2]:
+				for args in s[2][0][2]:
 					j += 1
 					result += _convert_statement(line, args, gsv, lsv, usings, false)
-					if j < i[2][0][2].size():
+					if j < s[2][0][2].size():
 						result += ", "
 				result += ")"
 			"method":
 				if previous in place_dot:
 					result += "."
 				var method = ""
-				if _is_remapped_method(i[1]):
-					method = _get_remapped_method(i[1]) + "(%s)"
-				elif _is_builtin(i[1]):
+				if _is_remapped_method(s[1]):
+					method = _get_remapped_method(s[1]) + "(%s)"
+				elif _is_builtin(s[1]):
 					# We have a constructor
-					method = _convert_builtin(i[1], !i[2].empty())
+					method = _convert_builtin(s[1], !s[2].empty())
 				else:
-					method = _pascal(i[1], _is_private(i[1])) + "(%s)"
-				_parse_using(i[1], usings)
-				var is_connect = i[1].begins_with("connect")
+					method = _pascal(s[1], _is_private(s[1])) + "(%s)"
+				_parse_using(s[1], usings)
+				var is_connect = s[1].begins_with("connect")
 				var connect_same_method = false
 				var j = 0
 				var arg_str = ""
-				for args in i[2]:
+				for args in s[2]:
 					j += 1
 					var part = _convert_statement(line, args, gsv, lsv, usings, false)
 					if is_connect:
@@ -902,7 +903,7 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 						elif j == 3 && connect_same_method:
 							part = "nameof(%s)" % _pascal(part.substr(1, part.length() - 2))
 					arg_str += part
-					if j < i[2].size():
+					if j < s[2].size():
 						arg_str += ", "
 				if method.find("%s") == -1:
 					result += method
@@ -912,46 +913,55 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 				previous = "method"
 				pass
 			"assignment", "comparison", "math":
-				result += _convert_statement(line, i[1], gsv, lsv, usings, false) + " %s " % i[2] + \
-						_convert_statement(line, i[3], gsv, lsv, usings, false)
+				result += _convert_statement(line, s[1], gsv, lsv, usings, false) + " %s " % s[2] + \
+						_convert_statement(line, s[3], gsv, lsv, usings, false)
 				previous = "assignment/comparison"
 			"get_node":
-				result += "GetNode<?TYPE?>(\"%s\")" % i[1]
-				warn(line, "Cannot deduct type of get_node")
+				result += "GetNode(\"%s\")" % s[1]
 				previous = "get_node"
 			"string":
-				result += i[1]
+				result += s[1]
 				previous = "string"
 				pass
 			"int", "float", "bool":
-				result += i[1]
+				result += s[1]
 				previous = "int/float/bool"
 			"const":
 				if previous in place_dot:
 					result += "."
-				result += i[1]
+				result += s[1]
+				warn(line, "If constant is enum refer to documentation for correct syntax.")
 				previous = "const"
 			"return":
-				result += "return " + _convert_statement(line, i[1], gsv, lsv, usings, false)
+				result += "return " + _convert_statement(line, s[1], gsv, lsv, usings, false)
 				previous = "return"
 			"array":
 				var elements := ""
-				for e in i[1]:
+				for e in s[1]:
 					elements += _convert_statement(line, e, gsv, lsv, usings, false) + ", "
 				elements.erase(elements.length() - 2, 2)
 				result += BUILTIN_CLASSES["Array"][1] % elements
 			"property":
-				result += "[%s]" % i[1]
+				result += "[%s]" % s[1]
 				previous = "property"
 			"subscription":
-				result += "[%s]" % _convert_statement(line, i[1], gsv, lsv, usings, false)
-				previous = "property/subscription"
+				var type = s[1][0][0] if !s[1].empty() else ""
+				match type:
+					"int":
+						if int(s[1][0][1]) < 0:
+							result += "[%s.Count %s]" % [result, s[1][0][1]]
+						else:
+							result += "[%s]" % s[1][0][1]
+					_:
+						result += "[%s]" % _convert_statement(line, s[1], gsv, lsv, usings, false)
+				previous = "subscription"
 			"?":
-				warn(line, "Expression %s is unrecognized!" % i[1])
+				warn(line, "Expression %s is unrecognized!" % s[1])
 				pass
 			var other:
-				print("type '%s' is unrecognized! Content:" % other, i)
+				print("type '%s' is unrecognized! Content:" % other, s)
 				warn(line, "type '%s' is unrecognized! This is a Bug and should be reported" % other)
+		i += 1
 	if place_semicolon:
 		result += ";"
 	return result
