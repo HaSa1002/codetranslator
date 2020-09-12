@@ -174,6 +174,9 @@ func generate_output():
 	if tabs > 0:
 		var tabbed_output := ""
 		for line in output.split('\n'):
+			if line.empty() || line.strip_edges().empty():
+				tabbed_output += "\n"
+				continue
 			tabbed_output += "\t".repeat(tabs) + line + "\n"
 		output = tabbed_output.left(tabbed_output.length() - 1)
 	$HSplitContainer/VSplitContainer/Output/Output.text = output
