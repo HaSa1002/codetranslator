@@ -292,10 +292,13 @@ func generate_csharp(source: String) -> String:
 			output += ")"
 			l = ""
 		if _is_if(l):
-			output += _convert_if(l)
+			output += "if (%s)" % _convert_statement(current_line, _parse_statement(current_line, _convert_if(l)), \
+					global_scope_vars, local_vars, usings, false)
 			l = ""
 		if _is_elif(l):
-			output += _convert_elif(l)
+			output += "else if (%s)" % _convert_statement(current_line, \
+					_parse_statement(current_line, _convert_elif(l)), \
+					global_scope_vars, local_vars, usings, false)
 			l = ""
 		if _is_else(l):
 			output += "else"
@@ -807,12 +810,18 @@ func _get_nodepath(string: String) -> String:
 
 ## Returns C# "if"
 func _convert_if(string: String) -> String:
-	return "if (" + string.substr(3, string.find(":") - (3 if string.find(":") != -1 else 0)).strip_edges() + ")"
+	var end = string.find(":")
+	if end != -1:
+		end -= 3
+	return string.substr(3, end).strip_edges()
 
 
 ## Returns C# "else if" from "elif"
 func _convert_elif(string: String) -> String:
-	return "else if (" + string.substr(5, string.find(":") - (5 if string.find(":") != -1 else 0)).strip_edges() + ")"
+	var end = string.find(":")
+	if end != -1:
+		end -= 5
+	return string.substr(5, end).strip_edges()
 
 
 ## Converts Class.new(...) to new Class(...)
