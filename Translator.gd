@@ -374,7 +374,7 @@ func _is_builtin(string: String) -> bool:
 	return string.substr(0, string.find("(")).strip_edges() in BUILTIN_CLASSES
 
 
-func _is_get_node(string: String) -> bool:
+func _is_nodepath(string: String) -> bool:
 	return string.begins_with("$")
 
 
@@ -617,6 +617,15 @@ func _is_class(string: String) -> bool:
 # Those parser should not generate complete lines				#
 
 
+func _get_end_of_expression(string: String) -> int:
+	var position := 0
+	for i in string:
+		if i in [".", " ", "[", "(", ","]:
+			return position
+		position += 1
+	return -1
+
+
 ## Returns return value of string
 func _get_return_value(string: String) -> String:
 	return string.substr(6).strip_edges()
@@ -770,13 +779,11 @@ func _get_correct_comma(argstr: String) -> int:
 	return comma
 
 
-func _get_get_node(string: String) -> String:
+func _get_nodepath(string: String) -> String:
 	print(string)
 	if string.begins_with("\""):
 		return string.substr(0, string.find("\"", 1) + 1)
-	var dot := string.find(".", 0)
-	var space := string.find(" ", 0)
-	var end = dot if (dot < space && dot != -1) || space == -1 else space
+	var end = _get_end_of_expression(string)
 	return string.substr(0, end)
 
 
@@ -1093,10 +1100,16 @@ func _parse_statement(line: int, string: String) -> Array:
 				string = ""
 			else:
 				string.erase(0, end + 1)
-		elif _is_get_node(string):
-			var node_path = _get_get_node(string.right(1))
-			res.push_back(["get_node", node_path])
-			string = string.substr(node_path.length() + 2)
+		elif _is_nodepath(string):
+			var node_path = _get_nodepath(string.right(1))
+			if node_path.begins_with("\""):
+				node_path.erase(0, 1)
+				node_path.erase(node_path.length() - 1, 1)
+				res.push_back(["get_node", node_path])
+				string = string.substr(node_path.length() + 3)
+			else:
+				res.push_back(["get_node", node_path])
+				string = string.substr(node_path.length() + 1)
 		elif _is_constructor(string):
 			var dot = string.find(".")
 			var end = _get_correct_comma(string.substr(dot + 4))
