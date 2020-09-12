@@ -169,6 +169,12 @@ func generate_output():
 				[source, generate_csharp(source)]
 	if $Controls/EscapeXML.pressed:
 		output = escape_xml(source)
+	var tabs := int($Controls/Indention.value)
+	if tabs > 0:
+		var tabbed_output := ""
+		for line in output.split('\n'):
+			tabbed_output += "\t".repeat(tabs) + line + "\n"
+		output = tabbed_output
 	$HSplitContainer/VSplitContainer/Output/Output.text = output
 	pass
 
@@ -1494,3 +1500,7 @@ func _on_Paste_pressed():
 func _on_About_pressed():
 	get_node(about_popup).popup_centered()
 	pass # Replace with function body.
+
+
+func _on_Indention_value_changed(value):
+	generate_output()

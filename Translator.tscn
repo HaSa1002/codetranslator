@@ -63,6 +63,14 @@ pressed = true
 group = ExtResource( 2 )
 text = "Output C#"
 
+[node name="Indention" type="SpinBox" parent="Editor/Controls"]
+margin_left = 309.0
+margin_right = 383.0
+margin_bottom = 40.0
+max_value = 10.0
+value = 4.0
+suffix = "Tabs"
+
 [node name="BeDumb" type="CheckButton" parent="Editor/Controls"]
 visible = false
 margin_left = 309.0
@@ -72,26 +80,26 @@ group = ExtResource( 2 )
 text = "Be Dumb"
 
 [node name="Regenerate" type="Button" parent="Editor/Controls"]
-margin_left = 309.0
-margin_right = 393.0
+margin_left = 387.0
+margin_right = 471.0
 margin_bottom = 40.0
 text = "Regenerate"
 
 [node name="ReportBug" type="Button" parent="Editor/Controls"]
-margin_left = 397.0
-margin_right = 479.0
+margin_left = 475.0
+margin_right = 557.0
 margin_bottom = 40.0
 text = "Report Bug"
 
 [node name="Paste" type="Button" parent="Editor/Controls"]
-margin_left = 483.0
-margin_right = 621.0
+margin_left = 561.0
+margin_right = 699.0
 margin_bottom = 40.0
 text = "Paste doesn't work?"
 
 [node name="About" type="Button" parent="Editor/Controls"]
-margin_left = 625.0
-margin_right = 675.0
+margin_left = 703.0
+margin_right = 753.0
 margin_bottom = 40.0
 text = "About"
 
@@ -309,6 +317,7 @@ __meta__ = {
 [connection signal="toggled" from="Editor/Controls/GDScript" to="Editor" method="_on_GDScript_toggled"]
 [connection signal="toggled" from="Editor/Controls/Typeless" to="Editor" method="_on_Typeless_toggled"]
 [connection signal="toggled" from="Editor/Controls/CSharp" to="Editor" method="_on_CSharp_toggled"]
+[connection signal="value_changed" from="Editor/Controls/Indention" to="Editor" method="_on_Indention_value_changed"]
 [connection signal="toggled" from="Editor/Controls/BeDumb" to="Editor" method="_on_BeDumb_toggled"]
 [connection signal="pressed" from="Editor/Controls/Regenerate" to="Editor" method="_on_Regenerate_pressed"]
 [connection signal="pressed" from="Editor/Controls/ReportBug" to="Editor" method="_on_ReportBug_pressed"]
