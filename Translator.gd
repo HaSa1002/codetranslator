@@ -597,7 +597,7 @@ func _is_global_var(string: String, global_vars) -> bool:
 ## Returns true if string contains an assignment
 func _is_assignment(string: String) -> bool:
 	for op in ASSIGNMENT_OPERATORS:
-		var pos = string.find(op)
+		var pos = _find_not_in_string(string, op)
 		if pos != -1:
 			return true
 	return false
@@ -837,7 +837,7 @@ func _get_correct_comma(string: String, offset := 0) -> int:
 			continue
 		if i < offset:
 			continue
-		if braces == 0 && string[i] == ",":
+		if braces == 0 && string[i] == "," && i == _find_not_in_string(string, ",", offset):
 			return i
 	return -1
 
@@ -1235,7 +1235,7 @@ func _parse_statement(line: int, string: String) -> Array:
 			var m := ["method", string.substr(0, string.find("(")), []]
 			var brace_content := _get_brace_content(string)
 			var last_comma := 0
-			var comma := brace_content.find(",")
+			var comma := _find_not_in_string(brace_content, ",")
 			while comma != -1:
 				var s: String = brace_content.substr(last_comma, comma - last_comma).strip_edges()
 				if s.find("(") != -1:
