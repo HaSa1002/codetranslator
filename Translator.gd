@@ -174,7 +174,7 @@ func generate_output():
 		var tabbed_output := ""
 		for line in output.split('\n'):
 			tabbed_output += "\t".repeat(tabs) + line + "\n"
-		output = tabbed_output
+		output = tabbed_output.left(tabbed_output.length() - 1)
 	$HSplitContainer/VSplitContainer/Output/Output.text = output
 	pass
 
@@ -407,6 +407,10 @@ func _is_pass(string: String) -> bool:
 	return string.begins_with("pass")
 
 
+func _is_negation(string) -> bool:
+	return string.begins_with("not") || string.begins_with("!")
+
+
 ## Returns true if string begins with (
 func _is_group(string: String) -> bool:
 	return string.begins_with("(")
@@ -579,10 +583,24 @@ func _is_assignment(string: String) -> bool:
 
 ## Returns true if string contains a mathematical expression
 func _is_math(string: String) -> bool:
+	var quote := string.find("\"")
+	var strings := []
+	while quote != -1:
+		strings.push_back(quote)
+		quote = string.find("\"", quote + 1)
+	
 	for op in MATH_OPERATORS:
 		var pos = string.find(op)
-		if pos != -1:
-			return true
+		if pos == -1:
+			continue
+		for i in strings.size():
+			if i % 2 == 0:
+				continue
+			if i + 1 == strings.size():
+				return false
+			if pos >= strings[i] && pos <= strings[i+1]:
+				return false
+		return true
 	return false
 
 
@@ -1025,6 +1043,9 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 			"nodepath":
 				result += "new NodePath(\"%s\")" % s[1]
 				previous = "nodepath"
+			"negation":
+				result += "!"
+				previous = "negation"
 			"?":
 				warn(line, "Expression %s is unrecognized!" % s[1])
 				pass
@@ -1254,6 +1275,12 @@ func _parse_statement(line: int, string: String) -> Array:
 			res.push_back(["comparison", _parse_statement(line, comparison[0]),
 					 comparison[1], _parse_statement(line, comparison[2])])
 			string = ""
+		elif _is_negation(string):
+			res.push_back(["negation"])
+			if string[0] == "!":
+				string.erase(0, 1)
+			else:
+				string.erase(0, 3)
 		elif _is_as(string):
 			res.push_back(["as", _get_isas(string)])
 			string = ""
