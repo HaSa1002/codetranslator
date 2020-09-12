@@ -9,7 +9,7 @@ extends VBoxContainer
 
 
 const GITHUB_URL = "https://github.com/HaSa1002/codetranslator/"
-const VERSION = "0.5-dev (Last Build 2020-09-10 15:14)"
+const VERSION = "0.6-dev (Last Build 2020-09-12 15:53)"
 
 
 ## Contains virtual functions that are automatically parsed as such
