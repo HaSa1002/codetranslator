@@ -140,7 +140,6 @@ export var paste_bug : NodePath
 func _ready():
 	get_node(about_popup).dialog_text = get_node(about_popup).dialog_text % VERSION
 	$Controls/Paste.visible = OS.has_feature("JavaScript")
-	pass # Replace with function body.
 
 
 
@@ -377,6 +376,23 @@ func _camelCase(string: String, keep_first_ := false) -> String:
 	return ("_" if first && keep_first_ else "") + string
 
 
+# Utilities
+
+func _find_not_in_string(string: String, character, start_offset := 0) -> int:
+	var quote := -1
+	for i in string.length():
+		if string[i] == "\"":
+			if quote == -1:
+				quote = i
+			else:
+				quote = -1
+			continue
+		if i < start_offset:
+			continue
+		if string[i] == character && quote == -1:
+			return i
+	return -1
+
 
 ### 				Detectors 				  ###
 # Detectors are only meant to return a bool,	#
@@ -477,7 +493,7 @@ func _is_private(string: String) -> bool:
 ## var x : Node
 ## var y := ""
 func _is_typed_declaration(string: String) -> bool:
-	return _is_declaration(string) && string.count(":") > 0
+	return _is_declaration(string) && _find_not_in_string(string, ":") > 0
 
 
 ## Returns true if string starts with func
@@ -583,24 +599,10 @@ func _is_assignment(string: String) -> bool:
 
 ## Returns true if string contains a mathematical expression
 func _is_math(string: String) -> bool:
-	var quote := string.find("\"")
-	var strings := []
-	while quote != -1:
-		strings.push_back(quote)
-		quote = string.find("\"", quote + 1)
-	
 	for op in MATH_OPERATORS:
-		var pos = string.find(op)
-		if pos == -1:
-			continue
-		for i in strings.size():
-			if i % 2 == 0:
-				continue
-			if i + 1 == strings.size():
-				return false
-			if pos >= strings[i] && pos <= strings[i+1]:
-				return false
-		return true
+		var pos = _find_not_in_string(string, op)
+		if pos != -1:
+			return pos
 	return false
 
 
@@ -692,7 +694,10 @@ func _get_type_from_td(string: String) -> String:
 	var is_inferred := string.count(":=") > 0
 	if is_inferred:
 		return ""
-	return string.split(":")[1].split("=")[0].strip_edges()
+	var colon := _find_not_in_string(string, ":")
+	if colon == -1:
+		return ""
+	return string.right(colon + 1).split("=")[0].strip_edges()
 
 
 ## Returns [name, type, default value] # null: valid | "": invalid
@@ -744,8 +749,8 @@ func _get_var_name_from_d(string: String) -> String:
 	var end = -1
 	if string.count(":=") > 0:
 		end = string.find(":=") - 3
-	elif string.count(":") > 0:
-		end = string.find(":") - 3
+	elif _find_not_in_string(string, ":") > 0:
+		end = _find_not_in_string(string, ":") - 3
 	elif string.count("=") > 0:
 		end = string.find("=") - 3
 	return string.substr(3, end).strip_edges()
