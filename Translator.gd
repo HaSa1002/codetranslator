@@ -387,13 +387,22 @@ func _is_builtin(string: String) -> bool:
 	return string.substr(0, string.find("(")).strip_edges() in BUILTIN_CLASSES
 
 ## Returns true if string begins with $
-func _is_nodepath(string: String) -> bool:
+func _is_getnode(string: String) -> bool:
 	return string.begins_with("$")
 
 
 ## Returns true on pass
 func _is_pass(string: String) -> bool:
 	return string.begins_with("pass")
+
+
+## Returns true if string begins with (
+func _is_group(string: String) -> bool:
+	return string.begins_with("(")
+
+
+func _is_nodepath(string: String) -> bool:
+	return string.begins_with("@")
 
 
 ## Returns true if complete line is a comment
@@ -799,6 +808,13 @@ func _get_correct_comma(argstr: String) -> int:
 
 
 func _get_nodepath(string: String) -> String:
+	var end = string.find("\"", 2)
+	if end != -1:
+		end -= 2
+	return string.substr(2, end)
+
+
+func _get_getnode(string: String) -> String:
 	if string.begins_with("\""):
 		return string.substr(0, string.find("\"", 1) + 1)
 	var end = _get_end_of_expression(string)
@@ -994,6 +1010,10 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 				previous = "as"
 			"group":
 				result += "(%s)" % _convert_statement(line, s[1], gsv, lsv, usings, false)
+				previous = "group"
+			"nodepath":
+				result += "new NodePath(\"%s\")" % s[1]
+				previous = "nodepath"
 			"?":
 				warn(line, "Expression %s is unrecognized!" % s[1])
 				pass
@@ -1132,8 +1152,8 @@ func _parse_statement(line: int, string: String) -> Array:
 				string = ""
 			else:
 				string.erase(0, end + 1)
-		elif _is_nodepath(string):
-			var node_path = _get_nodepath(string.right(1))
+		elif _is_getnode(string):
+			var node_path = _get_getnode(string.right(1))
 			if node_path.begins_with("\""):
 				node_path.erase(0, 1)
 				node_path.erase(node_path.length() - 1, 1)
@@ -1142,6 +1162,10 @@ func _parse_statement(line: int, string: String) -> Array:
 			else:
 				res.push_back(["get_node", node_path])
 				string = string.substr(node_path.length() + 1)
+		elif _is_nodepath(string):
+			var nodepath = _get_nodepath(string)
+			res.push_back(["nodepath", nodepath])
+			string = string.substr(nodepath.length() + 3)
 		elif _is_constructor(string):
 			var dot = string.find(".")
 			var end = _get_correct_comma(string.substr(dot + 4))
@@ -1185,7 +1209,7 @@ func _parse_statement(line: int, string: String) -> Array:
 				method_brace_r += 2
 			string.erase(0, method_brace_r)
 			res.push_back(m)
-		elif string.begins_with("("): # Group statement
+		elif _is_group(string):
 			var position := 0
 			var braces := 0
 			for character in string:
