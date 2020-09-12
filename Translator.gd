@@ -82,12 +82,14 @@ const COMPARISON_OPERATORS = [
 const REMAP_METHODS = {
 	"assert": "Debug.Assert",
 	"print": "GD.Print",
+	"prints": "GD.PrintS",
 	"abs": "Mathf.Abs",
 	"acos": "Mathf.Acos",
 	"asin": "Mathf.Asin",
 	"atan": "Mathf.Atan",
 	"atan2": "Mathf.Atan2",
 	"min": "Mathf.Min",
+	"ord": "char.GetNumericValue"
 }
 
 
@@ -163,7 +165,8 @@ func generate_output():
 	var output := ""
 	var source = $HSplitContainer/Source/Source.text
 	if $Controls/CSharp.pressed:
-		output = generate_csharp(source)
+		output = "[codeblocks]\n[gdscript]\n%s\n[/gdscript]\n[csharp]\n%s\n[/csharp]\n[/codeblocks]" % \
+				[source, generate_csharp(source)]
 	if $Controls/EscapeXML.pressed:
 		output = escape_xml(source)
 	$HSplitContainer/VSplitContainer/Output/Output.text = output
@@ -320,9 +323,11 @@ func generate_csharp(source: String) -> String:
 		output += "\t".repeat(braces - 1) + "}\n"
 		braces -= 1
 	var usings_str := ""
-	for using in usings:
-		usings_str += "using %s;\n" % using
-	output = usings_str + "\n" + output.rstrip("\n").replace("\t", "    ")
+	if is_global_scope:
+		for using in usings:
+			usings_str += "using %s;\n" % using
+		usings_str += "\n"
+	output = usings_str + output.rstrip("\n").replace("\t", "    ")
 	#print(output)
 	return output
 
