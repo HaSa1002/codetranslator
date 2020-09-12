@@ -369,11 +369,21 @@ func _camelCase(string: String, keep_first_ := false) -> String:
 # depending on the detected content.			#
 # Detectors may be used on complete lines		#
 
+## Returns true if string begins with as
+func _is_as(string: String) -> bool:
+	return string.begins_with("as")
+
+
+## Returns true if string begins with is
+func _is_is(string: String) -> bool:
+	return string.begins_with("is")
+
+
 ## Returns true if string is a built-in class
 func _is_builtin(string: String) -> bool:
 	return string.substr(0, string.find("(")).strip_edges() in BUILTIN_CLASSES
 
-
+## Returns true if string begins with $
 func _is_nodepath(string: String) -> bool:
 	return string.begins_with("$")
 
@@ -617,10 +627,16 @@ func _is_class(string: String) -> bool:
 # Those parser should not generate complete lines				#
 
 
+## Returns converison type
+func _get_isas(string: String) -> String:
+	return string.substr(2).strip_edges()
+
+
+## Returns position of the first occurrence of [.,<space>,<comma>,[,(]
 func _get_end_of_expression(string: String) -> int:
 	var position := 0
 	for i in string:
-		if i in [".", " ", "[", "(", ","]:
+		if i in [".", " ", "[", "]", "(", ")", ","]:
 			return position
 		position += 1
 	return -1
@@ -780,7 +796,6 @@ func _get_correct_comma(argstr: String) -> int:
 
 
 func _get_nodepath(string: String) -> String:
-	print(string)
 	if string.begins_with("\""):
 		return string.substr(0, string.find("\"", 1) + 1)
 	var end = _get_end_of_expression(string)
@@ -962,6 +977,12 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 					_:
 						result += "[%s]" % _convert_statement(line, s[1], gsv, lsv, usings, false)
 				previous = "subscription"
+			"is":
+				result += " is %s" % s[1]
+				previous = "is"
+			"as":
+				result += " as %s" % s[1]
+				previous = "as"
 			"?":
 				warn(line, "Expression %s is unrecognized!" % s[1])
 				pass
@@ -1153,6 +1174,9 @@ func _parse_statement(line: int, string: String) -> Array:
 				method_brace_r += 2
 			string.erase(0, method_brace_r)
 			res.push_back(m)
+		elif _is_is(string):
+			res.push_back(["is", _get_isas(string)])
+			string = ""
 		elif !skip_math && _is_math(string):
 			var math = _split_math(string)
 			var data = ["math", _parse_statement(line, math[0]),
@@ -1170,6 +1194,9 @@ func _parse_statement(line: int, string: String) -> Array:
 			var comparison = _split_comparison(string)
 			res.push_back(["comparison", _parse_statement(line, comparison[0]),
 					 comparison[1], _parse_statement(line, comparison[2])])
+			string = ""
+		elif _is_as(string):
+			res.push_back(["as", _get_isas(string)])
 			string = ""
 		elif _is_assignment(string):
 			var assignment = _split_assignment(string)
