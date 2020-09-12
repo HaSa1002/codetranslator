@@ -165,7 +165,7 @@ func generate_output():
 	var source = $HSplitContainer/Source/Source.text
 	if $Controls/CSharp.pressed:
 		output = "[codeblocks]\n[gdscript]\n%s\n[/gdscript]\n[csharp]\n%s\n[/csharp]\n[/codeblocks]" % \
-				[source, generate_csharp(source)]
+			[source, generate_csharp(source)]
 	if $Controls/EscapeXML.pressed:
 		output = escape_xml(source)
 	var tabs := int($Controls/Indention.value)
@@ -301,12 +301,12 @@ func generate_csharp(source: String) -> String:
 			l = ""
 		if _is_if(l):
 			output += "if (%s)" % _convert_statement(current_line, _parse_statement(current_line, _convert_if(l)), \
-					global_scope_vars, local_vars, usings, false)
+				global_scope_vars, local_vars, usings, false)
 			l = ""
 		if _is_elif(l):
 			output += "else if (%s)" % _convert_statement(current_line, \
-					_parse_statement(current_line, _convert_elif(l)), \
-					global_scope_vars, local_vars, usings, false)
+				_parse_statement(current_line, _convert_elif(l)), \
+				global_scope_vars, local_vars, usings, false)
 			l = ""
 		if _is_else(l):
 			output += "else"
@@ -316,7 +316,7 @@ func generate_csharp(source: String) -> String:
 			l = l.left(l.length() - 2).strip_edges()
 		if !l.empty():
 			output += _convert_statement(current_line, _parse_statement(current_line, l), \
-					global_scope_vars, local_vars, usings, !is_multiline)
+				global_scope_vars, local_vars, usings, !is_multiline)
 		if !comment.empty():
 			output += " //" + comment
 			comment = ""
@@ -341,7 +341,7 @@ func generate_csharp(source: String) -> String:
 ## Replaces Tabs, &, <, >
 func escape_xml(source: String) -> String:
 	return source.replace("\t", "    ").replace("&", "&amp;") \
-			.replace("<", "&lt;").replace(">", "&gt;")
+		.replace("<", "&lt;").replace(">", "&gt;")
 
 
 
@@ -535,8 +535,8 @@ func _is_function(string: String) -> bool:
 ## Returns true if string begins with extends, class_name, or tool
 func _is_file_scope(string: String) -> bool:
 	return (string.begins_with("extends")
-			|| string.begins_with("class_name")
-			|| string.begins_with("tool"))
+		|| string.begins_with("class_name")
+		|| string.begins_with("tool"))
 
 
 ## Returns true, if string is a string
@@ -548,7 +548,8 @@ func _is_string(string: String) -> bool:
 ## Returns true if next method is .new(
 func _is_constructor(string: String) -> bool:
 	var new_pos = string.find(".new(")
-	return new_pos != -1 && new_pos <= string.find(".")
+	var brace = string.find("(")
+	return brace != 0 && new_pos != -1 && new_pos <= string.find(".")
 
 
 ## Returns true if string is a method
@@ -820,25 +821,20 @@ func _get_remapped_method(method: String) -> String:
 
 
 ## Returns the correct comma position after closing brace
-func _get_correct_comma(argstr: String) -> int:
-	var brace_stack := [true]
-	var end_brace := -1
-	var search_pos := argstr.find("(") + 1
-	while !brace_stack.empty():
-		var bl = argstr.find("(", search_pos)
-		var br = argstr.find(")", search_pos)
-		if bl != -1 && (bl < br || br == -1):
-			brace_stack.push_back(true)
-			search_pos = bl + 1
-		elif br != -1 && (br < bl || bl == -1):
-			brace_stack.pop_back()
-			search_pos = br + 1
-			end_brace = br
-		else: break
-	var comma = argstr.find(",", end_brace)
-	if comma == -1:
-		return argstr.length()
-	return comma
+func _get_correct_comma(string: String, offset := 0) -> int:
+	var braces := 0
+	for i in string.length():
+		if string[i] == "(":
+			braces += 1
+			continue
+		if string[i] == ")":
+			braces -= 1
+			continue
+		if i < offset:
+			continue
+		if braces == 0 && string[i] == ",":
+			return i
+	return -1
 
 
 func _get_nodepath(string: String) -> String:
@@ -853,6 +849,22 @@ func _get_getnode(string: String) -> String:
 		return string.substr(0, string.find("\"", 1) + 1)
 	var end = _get_end_of_expression(string)
 	return string.substr(0, end)
+
+
+func _get_brace_content(string: String) -> String:
+	var braces := 0
+	var first_brace := -1
+	for i in string.length():
+		if string[i] == "(":
+			if braces == 0:
+				first_brace = i + 1
+			braces += 1
+			continue
+		if string[i] == ")":
+			braces -= 1
+		if braces == 0 && first_brace != -1:
+			return string.substr(first_brace, i - first_brace)
+	return string.substr(first_brace)
 
 
 ### 			Converters 				  ###
@@ -971,7 +983,7 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 				else:
 					method = _pascal(s[1], _is_private(s[1])) + "(%s)"
 				_parse_using(s[1], usings)
-				var is_connect = s[1].begins_with("connect")
+				var is_connect = s[1] == "connect"
 				var connect_same_method = false
 				var j = 0
 				var arg_str = ""
@@ -995,7 +1007,7 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 				pass
 			"assignment", "comparison", "math":
 				result += _convert_statement(line, s[1], gsv, lsv, usings, false) + " %s " % s[2] + \
-						_convert_statement(line, s[3], gsv, lsv, usings, false)
+					_convert_statement(line, s[3], gsv, lsv, usings, false)
 				previous = "assignment/comparison"
 			"get_node":
 				result += "GetNode(\"%s\")" % s[1]
@@ -1205,46 +1217,40 @@ func _parse_statement(line: int, string: String) -> Array:
 			string = string.substr(nodepath.length() + 3)
 		elif _is_constructor(string):
 			var dot = string.find(".")
-			var end = _get_correct_comma(string.substr(dot + 4))
+			var brace_content = _get_brace_content(string)
+			var end = brace_content.length()
+			var args = _parse_statement(line, "new(%s)" % brace_content)
 			res.push_back([
 				"constructor",
 				string.substr(0, dot).strip_edges(),
-				_parse_statement(line, string.substr(dot + 4, end))
+				_parse_statement(line, "new(%s)" % brace_content)
 				])
-			if string.length() == dot + end + 6:
-				string = ""
-			else:
-				string = string.substr(dot + end + 6)
+			string = string.substr(dot + end + 6)
 		elif _is_method(string):
-			var method_brace_l = string.find("(")
-			var method_brace_r = string.find_last(")")
-			var m = ["method", string.substr(0, method_brace_l), []]
-			var last_comma = method_brace_l + 1
-			var comma = string.find(",", last_comma)
-			
+			var m := ["method", string.substr(0, string.find("(")), []]
+			var brace_content := _get_brace_content(string)
+			var last_comma := 0
+			var comma := brace_content.find(",")
 			while comma != -1:
-				var s := string.substr(last_comma, comma - last_comma).strip_edges()
+				var s: String = brace_content.substr(last_comma, comma - last_comma).strip_edges()
 				if s.find("(") != -1:
-					var correct = _get_correct_comma(string.substr(last_comma))
+					var correct = _get_correct_comma(brace_content.substr(last_comma))
 					if correct != -1:
 						s = string.substr(last_comma, correct).strip_edges()
 						comma = last_comma + correct
+					else:
+						comma = -1
 				if !s.empty():
 					m[2].push_back(_parse_statement(line, s))
 				last_comma = comma + 1
-				comma = string.find(",", last_comma)
-				if comma < method_brace_r:
-					method_brace_r = string.find(")", comma)
+				comma = _get_correct_comma(brace_content, last_comma)
 			
-			var length = method_brace_r
-			if length != -1:
-				length -= last_comma
-			var s = string.substr(last_comma, length).strip_edges().rstrip(")")
+			var s = brace_content.substr(last_comma).strip_edges()
 			if !s.empty():
 				m[2].push_back(_parse_statement(line, s))
-			if method_brace_r != -1:
-				method_brace_r += 2
-			string.erase(0, method_brace_r)
+			string = string.substr(m[1].length() + brace_content.length() + 2)
+			if string.begins_with("."):
+				string.erase(0,1)
 			res.push_back(m)
 		elif _is_group(string):
 			var position := 0
@@ -1265,7 +1271,7 @@ func _parse_statement(line: int, string: String) -> Array:
 		elif !skip_math && _is_math(string):
 			var math = _split_math(string)
 			var data = ["math", _parse_statement(line, math[0]),
-					 math[1], _parse_statement(line, math[2])]
+				math[1], _parse_statement(line, math[2])]
 			for d in data[1]:
 				if d[0] == "subscription":
 					skip_math = true;
@@ -1278,7 +1284,7 @@ func _parse_statement(line: int, string: String) -> Array:
 		elif _is_comparison(string):
 			var comparison = _split_comparison(string)
 			res.push_back(["comparison", _parse_statement(line, comparison[0]),
-					 comparison[1], _parse_statement(line, comparison[2])])
+				comparison[1], _parse_statement(line, comparison[2])])
 			string = ""
 		elif _is_negation(string):
 			res.push_back(["negation"])
@@ -1292,7 +1298,7 @@ func _parse_statement(line: int, string: String) -> Array:
 		elif _is_assignment(string):
 			var assignment = _split_assignment(string)
 			res.push_back(["assignment", _parse_statement(line, assignment[0]),
-					 assignment[1], _parse_statement(line, assignment[2])])
+				assignment[1], _parse_statement(line, assignment[2])])
 			string = ""
 		elif _is_constant(string):
 			res.push_back(["const", string])
@@ -1489,7 +1495,7 @@ func _on_ReportBug_pressed():
 		output = output.replace(r, replaces[r])
 	
 
-	body = (body % [VERSION, source, output, warnings]).replace("\n", "%0A") 
+	body = (body % [VERSION, source, output, warnings]).replace("\n", "%0A")
 
 	OS.shell_open(GITHUB_URL + "issues/new?body=%s" % body)
 	
