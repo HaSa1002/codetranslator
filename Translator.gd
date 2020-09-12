@@ -517,7 +517,7 @@ func _is_constructor(string: String) -> bool:
 func _is_method(string: String) -> bool:
 	var brace = string.find("(")
 	var dot = string.find(".")
-	return (brace != -1 && brace < dot) || (brace != -1 && dot == -1)
+	return brace != 0 && (brace != -1 && brace < dot) || (brace != -1 && dot == -1)
 
 
 ## Returns true if string is potentially a variable or property
@@ -983,6 +983,8 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 			"as":
 				result += " as %s" % s[1]
 				previous = "as"
+			"group":
+				result += "(%s)" % _convert_statement(line, s[1], gsv, lsv, usings, false)
 			"?":
 				warn(line, "Expression %s is unrecognized!" % s[1])
 				pass
@@ -1174,6 +1176,19 @@ func _parse_statement(line: int, string: String) -> Array:
 				method_brace_r += 2
 			string.erase(0, method_brace_r)
 			res.push_back(m)
+		elif string.begins_with("("): # Group statement
+			var position := 0
+			var braces := 0
+			for character in string:
+				if character == "(":
+					braces += 1
+				elif character == ")":
+					braces -= 1
+				if braces == 0:
+					break
+				position += 1
+			res.push_back(["group", _parse_statement(line, string.substr(1, position - 1))])
+			string.erase(0, position + 1)
 		elif _is_is(string):
 			res.push_back(["is", _get_isas(string)])
 			string = ""
