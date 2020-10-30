@@ -83,8 +83,8 @@ const REMAP_METHODS = {
 	"assert": "Debug.Assert",
 	"print": "GD.Print",
 	"prints": "GD.PrintS",
-	"load": "GD.load",
-	"preload": "GD.load",
+	"load": "GD.Load",
+	"preload": "GD.Load",
 	"abs": "Mathf.Abs",
 	"acos": "Mathf.Acos",
 	"asin": "Mathf.Asin",
@@ -406,12 +406,12 @@ func _find_not_in_string(string: String, character, start_offset := 0) -> int:
 
 ## Returns true if string begins with as
 func _is_as(string: String) -> bool:
-	return string.begins_with("as")
+	return string.begins_with("as ")
 
 
 ## Returns true if string begins with is
 func _is_is(string: String) -> bool:
-	return string.begins_with("is")
+	return string.begins_with("is ")
 
 
 ## Returns true if string is a built-in class
