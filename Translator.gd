@@ -304,6 +304,17 @@ func generate_csharp(source: String) -> String:
 				output = output.left(output.find_last(", "))
 			output += ")"
 			l = ""
+		if _is_while(l):
+			output += "while (%s)" % _convert_statement(current_line, _parse_statement(current_line, _convert_while(l)), \
+				global_scope_vars, local_vars, usings, false)
+			l = ""
+		if _is_for(l):
+			if _is_foreach(l):
+				output += "foreach (var %s)" % _convert_statement(current_line, _parse_statement(current_line, _convert_foreach(l)), \
+					global_scope_vars, local_vars, usings, false)
+			else:
+				output += "for (%s)" % _convert_for(l)
+			l = ""
 		if _is_if(l):
 			output += "if (%s)" % _convert_statement(current_line, _parse_statement(current_line, _convert_if(l)), \
 				global_scope_vars, local_vars, usings, false)
@@ -414,6 +425,10 @@ func _is_is(string: String) -> bool:
 	return string.begins_with("is ")
 
 
+func _is_in(string: String) -> bool:
+	return string.find(" in ") != -1
+
+
 ## Returns true if string is a built-in class
 func _is_builtin(string: String) -> bool:
 	return string.substr(0, string.find("(")).strip_edges() in BUILTIN_CLASSES
@@ -457,6 +472,21 @@ func _has_comment(string: String) -> bool:
 ## var x
 func _is_declaration(string: String) -> bool:
 	return string.begins_with("var")
+
+
+## Returns true if line is a while loop
+func _is_while(string: String) -> bool:
+	return string.begins_with("while")
+
+
+## Returns true if line is a for or foreach loop
+func _is_for(string: String) -> bool:
+	return string.begins_with("for")
+
+
+## Returns true if line is for loop and not has range keyword
+func _is_foreach(string: String) -> bool:
+	return string.find("range(") == -1
 
 
 ## Returns true if line is if
@@ -681,6 +711,10 @@ func _get_isas(string: String) -> String:
 	return string.substr(2).strip_edges()
 
 
+func _get_in(string: String) -> Array:
+	return Array(string.split(" in "))
+
+
 ## Returns position of the first occurrence of [.,<space>,<comma>,[,(]
 func _get_end_of_expression(string: String) -> int:
 	var position := 0
@@ -875,6 +909,52 @@ func _get_brace_content(string: String) -> String:
 ### 			Converters 				  ###
 # Converters take input and output Strings! #
 
+func _convert_while(string: String) -> String:
+	var end = string.find(":")
+	if end != -1:
+		end -= 6
+	return string.substr(6, end).strip_edges()
+
+
+func _convert_foreach(string: String) -> String:
+	var end = string.find(":")
+	if end != -1:
+		end -= 4
+	return string.substr(4, end).strip_edges()
+
+func _convert_for(string: String) -> String:
+	var end := string.find(":")
+	if end != -1:
+		end -= 4
+	var details := string.substr(4, end).strip_edges()
+	end = details.find(" in ")
+	if end == -1:
+		return "var %s = 0;;" % details
+	var variable = details.substr(0, end)
+	end = details.find("(") - details.find(")")
+	if end <= 0 || details.find(")") == -1:
+		end = -1
+		
+	var info := details.substr(details.find("("), end).split(",")
+	var start := 0
+	var increment := 1
+	var comp := 0
+	match info.size():
+		3:
+			start = int(info[0])
+			increment = int(info[2])
+			comp = int(info[1])
+		2:
+			start = int(info[0])
+			comp = int(info[1])
+		1:
+			comp = int(info[0])
+	if increment == 1:
+		return "var %s = %d; %s < %d; %s++" % [variable, start, variable, comp, variable]
+	elif increment == -1:
+		return "var %s = %d; %s < %d; %s--" % [variable, start, variable, comp, variable]
+	return "var %s = %d; %s < %d; %s += %d" % [variable, start, variable, comp, variable, increment]
+
 ## Returns C# "if"
 func _convert_if(string: String) -> String:
 	var end = string.find(":")
@@ -1059,6 +1139,9 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 			"as":
 				result += " as %s" % s[1]
 				previous = "as"
+			"in":
+				result += _convert_statement(line, s[1], gsv, lsv, usings, false) + " in " + _convert_statement(line, s[2], gsv, lsv, usings, false)
+				previous = "in"
 			"group":
 				result += "(%s)" % _convert_statement(line, s[1], gsv, lsv, usings, false)
 				previous = "group"
@@ -1297,6 +1380,10 @@ func _parse_statement(line: int, string: String) -> Array:
 				string.erase(0, 3)
 		elif _is_as(string):
 			res.push_back(["as", _get_isas(string)])
+			string = ""
+		elif _is_in(string):
+			var sides := _get_in(string)
+			res.push_back(["in", _parse_statement(line, sides[0]), _parse_statement(line, sides[1] if sides.size() > 1 else [])])
 			string = ""
 		elif _is_assignment(string):
 			var assignment = _split_assignment(string)
