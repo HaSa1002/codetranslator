@@ -129,7 +129,7 @@ const BUILTIN_CLASSES = {
 	"PackedInt64Array": ["Int64[]", "Int64[] {%s}"],
 	"PackedFloat32Array": ["float[]", "float[] {%s}"],
 	"PackedFloat64Array": ["double[], double[] {%s}"],
-	"PackedVector2Array": ["Vector2[], Vector2[] {%s}"],
+	"PackedVector2Array": ["Vector2[]", "Vector2[] {%s}"],
 	"PackedVector3Array": ["Vector3[]", "Vector3[] {%s}"],
 	"PackedColorArray": ["Color[]", "Color[] {%s}"],
 }
