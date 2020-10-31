@@ -83,6 +83,7 @@ const REMAP_METHODS = {
 	"assert": "Debug.Assert",
 	"print": "GD.Print",
 	"prints": "GD.PrintS",
+	"printt": "GD.PrintT",
 	"load": "GD.Load",
 	"preload": "GD.Load",
 	"abs": "Mathf.Abs",
@@ -91,7 +92,9 @@ const REMAP_METHODS = {
 	"atan": "Mathf.Atan",
 	"atan2": "Mathf.Atan2",
 	"min": "Mathf.Min",
-	"ord": "char.GetNumericValue"
+	"ord": "char.GetNumericValue",
+	"push_error": "GD.PushError",
+	"push_warning": "GD.PushWarning",
 }
 
 
