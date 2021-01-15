@@ -98,6 +98,13 @@ const REMAP_METHODS = {
 }
 
 
+## Contains all keyword remaps that are parsed as variables
+const REMAP_VARIABLES = {
+	"self": "this",
+	"event": "@event",
+}
+
+
 ## Contains the needed usings, when using the specified method
 const METHOD_USINGS = {
 	"assert": "System.Diagnostics",
@@ -292,8 +299,12 @@ func generate_csharp(source: String) -> String:
 					warn(current_line, "Expected argument name")
 					output += "?NAME?"
 				else:
-					output += arg[0]
-					local_vars[indent][arg[0]] = [arg[0], arg[1]]
+					if arg[0] in REMAP_VARIABLES:
+						output += REMAP_VARIABLES[arg[0]]
+						local_vars[indent][arg[0]] = [REMAP_VARIABLES[arg[0]], arg[1]]
+					else:
+						output += arg[0]
+						local_vars[indent][arg[0]] = [arg[0], arg[1]]
 				
 				if arg[2] == null:
 					pass # We ensure below is a String... Hacky tho
@@ -1038,8 +1049,8 @@ func _convert_statement(line: int, statement: Array, gsv, lsv, usings, place_sem
 					result += gsv[s[1]][0]
 				elif _var_in_local_vars(s[1], lsv):
 					result += _get_var_in_local_vars(s[1], lsv)[0]
-				elif s[1] == "self":
-					result += "this"
+				elif s[1] in REMAP_VARIABLES:
+					result += REMAP_VARIABLES[s[1]]
 				else:
 					# We have to assume, that the variable is declared in a parent class
 					var is_private := _is_private(s[1])
@@ -1211,6 +1222,10 @@ func _parse_declaration(line: int, global_scope: bool, string: String, gsv, lsvi
 			var vname = _pascal(info[0], _is_private(info[0]))
 			gsv[info[0]] = [vname, info[1]]
 			info[0] = vname
+		elif info[0] in REMAP_VARIABLES:
+			var vname =  REMAP_VARIABLES[info[0]]
+			lsvi[info[0]] = [vname, info[1]]
+			info[0] = vname
 		else:
 			var vname =  _camelCase(info[0], false)
 			lsvi[info[0]] = [vname, info[1]]
@@ -1227,6 +1242,7 @@ func _parse_declaration(line: int, global_scope: bool, string: String, gsv, lsvi
 			if _is_constructor(info[2]):
 				result += _convert_constructor(info[2])
 			else:
+				print(line)
 				result += _convert_statement(line, _parse_statement(line, info[2]), gsv, lsv, usings, false)
 	result += ";"
 	return result
