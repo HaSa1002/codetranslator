@@ -391,6 +391,8 @@ func generate_csharp(source: String) -> String:
 			depth = indent
 			output += "\t".repeat(indent)
 		is_multiline = false
+		if l.ends_with(";"):
+			l.erase(l.length() - 1, 1)
 		if l.empty() || Detector.is_pass(l):
 			output += "\n"
 			continue
