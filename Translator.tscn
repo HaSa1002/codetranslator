@@ -131,6 +131,7 @@ margin_right = 490.0
 margin_bottom = 556.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
+custom_colors/safe_line_number_color = Color( 0.901961, 0, 0, 1 )
 text = "class_name Example, \"res://path.png\"
 extends Node
 var aes = AESContext.new()
@@ -177,6 +178,7 @@ breakpoint_gutter = true
 fold_gutter = true
 highlight_all_occurrences = true
 smooth_scrolling = true
+wrap_enabled = true
 caret_blink = true
 caret_blink_speed = 0.5
 
@@ -307,12 +309,13 @@ margin_bottom = 132.5
 popup_exclusive = true
 window_title = "Paste Bug Workaround"
 dialog_text = "Because of security reasons, it is in some browsers not possible to access the clipboard in Godot. You have two options:
-1) Use a chromium based browser (Chrome, Chromium, Edge)
+1) Use a chromium based browser (Chrome, Chromium, Edge, Opera)
 2) Navigate to Edit -> Paste and then press Ctrl + V"
 dialog_autowrap = true
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
 [connection signal="toggled" from="Editor/Controls/EscapeXML" to="Editor" method="_on_EscapeXML_toggled"]
 [connection signal="toggled" from="Editor/Controls/GDScript" to="Editor" method="_on_GDScript_toggled"]
 [connection signal="toggled" from="Editor/Controls/Typeless" to="Editor" method="_on_Typeless_toggled"]
