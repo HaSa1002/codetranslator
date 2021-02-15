@@ -150,7 +150,7 @@ static func get_correct_comma(string: String, offset := 0) -> int:
 			continue
 		if i < offset:
 			continue
-		if braces == 0 && string[i] == "," && i == Utility.find_not_in_string(string, ",", offset):
+		if braces == 0 && string[i] == ",":
 			return i
 	return -1
 
@@ -292,7 +292,7 @@ func parse_statement(line: int, string: String) -> Array:
 				if s.find("(") != -1:
 					var correct = get_correct_comma(brace_content.substr(last_comma))
 					if correct != -1:
-						s = string.substr(last_comma, correct).strip_edges()
+						s = brace_content.substr(last_comma, correct).strip_edges()
 						comma = last_comma + correct
 					else:
 						comma = -1
