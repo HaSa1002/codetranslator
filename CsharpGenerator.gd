@@ -487,6 +487,8 @@ func generate_csharp(source: String) -> String:
 			is_multiline = true
 			l = l.left(l.length() - 2).strip_edges()
 		if !l.empty():
+			var debug_parse_result = parser.parse_statement(current_line, l)
+			print(debug_parse_result)
 			output += convert_statement(current_line, parser.parse_statement(current_line, l), \
 				global_scope_vars, local_vars, usings, !is_multiline)
 		if !comment.empty():
