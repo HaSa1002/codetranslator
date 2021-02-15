@@ -9,13 +9,37 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "Node",
+"class": "CsharpGenerator",
+"language": "GDScript",
+"path": "res://CsharpGenerator.gd"
+}, {
+"base": "Object",
+"class": "Detector",
+"language": "GDScript",
+"path": "res://Detector.gd"
+}, {
+"base": "Object",
+"class": "Parser",
+"language": "GDScript",
+"path": "res://Parser.gd"
+}, {
 "base": "VBoxContainer",
 "class": "Translator",
 "language": "GDScript",
 "path": "res://Translator.gd"
+}, {
+"base": "Object",
+"class": "Utility",
+"language": "GDScript",
+"path": "res://Utility.gd"
 } ]
 _global_script_class_icons={
-"Translator": ""
+"CsharpGenerator": "",
+"Detector": "",
+"Parser": "",
+"Translator": "",
+"Utility": ""
 }
 
 [application]
