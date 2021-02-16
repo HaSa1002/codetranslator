@@ -292,10 +292,13 @@ func convert_builtin(type: String, has_args := false, as_type := false) -> Strin
 
 ## Parses a variable declaration and output converted code
 func parse_declaration(line: int, global_scope: bool, string: String, gsv, lsvi, lsv, usings) -> String:
+	var is_const = Detector.is_const_declaration(string)
 	var result := ""
 	if global_scope: # Include access modifier in global scope
 		result += "private " if Detector.is_private_var(string) else "public "
-	var info := Parser.parse_variable_d(string, gsv, lsv)
+	var info := Parser.parse_variable_d(string, gsv, lsv, is_const)
+	if is_const:
+		result += "const "
 	if info[1] == null:
 		info[1] = "?VAR?"
 		warn(line, "Type of declaration is unknown")
@@ -309,15 +312,15 @@ func parse_declaration(line: int, global_scope: bool, string: String, gsv, lsvi,
 		info[0] = "?NAME?"
 	else:
 		if global_scope:
-			var vname = Utility.pascal(info[0], Detector.is_private(info[0]))
+			var vname = info[0] if is_const else Utility.pascal(info[0], Detector.is_private(info[0]))
 			gsv[info[0]] = [vname, info[1]]
 			info[0] = vname
 		elif info[0] in Utility.REMAP_VARIABLES:
-			var vname =  Utility.REMAP_VARIABLES[info[0]]
+			var vname = Utility.REMAP_VARIABLES[info[0]]
 			lsvi[info[0]] = [vname, info[1]]
 			info[0] = vname
 		else:
-			var vname =  Utility.camelCase(info[0], false)
+			var vname = info[0] if is_const else Utility.camelCase(info[0], false)
 			lsvi[info[0]] = [vname, info[1]]
 			info[0] = vname
 	if Detector.is_builtin(info[1]):
@@ -404,7 +407,7 @@ func generate_csharp(source: String) -> String:
 			# split comment out of case conversion
 			comment = l.split("#")[1]
 			l = l.split("#")[0]
-		if Detector.is_declaration(l):
+		if Detector.is_declaration(l) || Detector.is_const_declaration(l):
 			var is_global_var = indent == 1 && is_global_scope
 			output += parse_declaration(current_line, is_global_var, l, \
 				global_scope_vars, local_vars[indent], local_vars, usings)

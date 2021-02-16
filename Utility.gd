@@ -239,15 +239,16 @@ static func get_var_in_local_vars(string: String, lsv) -> Array:
 
 
 ## Returns variable name from declaration
-static func get_var_name_from_d(string: String) -> String:
+static func get_var_name_from_d(string: String, is_const := false) -> String:
+	var offset = 5 if is_const else 3
 	var end = -1
 	if string.count(":=") > 0:
-		end = string.find(":=") - 3
+		end = string.find(":=") - offset
 	elif find_not_in_string(string, ":") > 0:
-		end = find_not_in_string(string, ":") - 3
+		end = find_not_in_string(string, ":") - offset
 	elif string.count("=") > 0:
-		end = string.find("=") - 3
-	return string.substr(3, end).strip_edges()
+		end = string.find("=") - offset
+	return string.substr(offset, end).strip_edges()
 
 
 ## Returns true if method is remapped in C# (i.e. using a namespace)
