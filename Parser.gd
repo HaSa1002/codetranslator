@@ -386,11 +386,11 @@ func parse_statement(line: int, string: String) -> Array:
 
 ## Parses variable declaration and does basic type guessing
 ## Structure: [name, type, default_value, type_unsafe:bool]
-static func parse_variable_d(string: String, gsv, lsv) -> Array:
+static func parse_variable_d(string: String, gsv, lsv, is_const := false) -> Array:
 	var result = [null, null, null, false]
 	if Detector.is_typed_declaration(string) && !get_type_from_td(string).empty():
 		result[1] = get_type_from_td(string)
-	var vname = Utility.get_var_name_from_d(string)
+	var vname = Utility.get_var_name_from_d(string, is_const)
 	if !vname.empty():
 		result[0] = vname
 	if Detector.is_initialization(string):

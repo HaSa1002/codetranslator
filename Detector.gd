@@ -62,7 +62,13 @@ static func has_comment(string: String) -> bool:
 ## Returns true if line is a declaration
 ## var x
 static func is_declaration(string: String) -> bool:
-	return string.begins_with("var") || string.begins_with("const")
+	return string.begins_with("var")
+
+
+## Returns true if line is a const delcaration
+## const MY_CONST
+static func is_const_declaration(string: String) -> bool:
+	return string.begins_with("const")
 
 
 ## Returns true if line is a while loop
@@ -101,13 +107,13 @@ static func is_else(string: String) -> bool:
 ## Returns true if line is initialization
 ## var x = 10
 static func is_initialization(string: String) -> bool:
-	return is_declaration(string) && string.count("=") > 0
+	return (is_declaration(string) || is_const_declaration(string)) && string.count("=") > 0
 
 
 ## Returns true if variable declared in line is private
 ## var _private
 static func is_private_var(string: String) -> bool:
-	return is_private(Utility.get_var_name_from_d(string))
+	return is_private(Utility.get_var_name_from_d(string, is_const_declaration(string)))
 
 
 ## Returns true, if string starts with underscore
