@@ -34,6 +34,9 @@ func warn(line : int, what : String):
 func clear():
 	$HSplitContainer/VSplitContainer/Output/Output.text = ""
 	$HSplitContainer/VSplitContainer/Warnings/Warnings.text = ""
+	var source := $HSplitContainer/Source/Source as TextEdit
+	for i in range(source.get_line_count()):
+		source.set_line_as_safe(i, false)
 
 
 ## Translates input based on the wanted output determined through the buttons
