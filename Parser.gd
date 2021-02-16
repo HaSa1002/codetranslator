@@ -323,7 +323,7 @@ func parse_statement(line: int, string: String) -> Array:
 			res.push_back(["is", get_isas(string)])
 			string = ""
 		elif !skip_math && Detector.is_math(string):
-			var math = Utility._split_math(string)
+			var math = Utility.split_math(string)
 			var data = ["math", parse_statement(line, math[0]),
 				math[1], parse_statement(line, math[2])]
 			for d in data[1]:
