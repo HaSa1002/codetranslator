@@ -193,7 +193,8 @@ static func find_not_in_string(string: String, character: String, start_offset :
 			continue
 		if i < start_offset:
 			continue
-		if string[i] == character && quote == -1:
+		var pos = string.find(character, i - character.length())
+		if pos != -1 && pos <= i && quote == -1:
 			return i
 	return -1
 
@@ -212,6 +213,17 @@ static func split_math(string: String) -> Array:
 ## [left side, operator, right side]
 static func split_assignment(string: String) -> Array:
 	for op in ASSIGNMENT_OPERATORS:
+		var pos = string.find(op)
+		if pos != -1:
+			return [string.substr(0, pos).strip_edges(), op, string.substr(pos + op.length())]
+	assert(false)
+	return [string, "", ""]
+
+
+## Returns the bitwise expression as
+## [left side, operator, right side]
+static func split_bitwise(string: String) -> Array:
+	for op in BITWISE_OPERATORS:
 		var pos = string.find(op)
 		if pos != -1:
 			return [string.substr(0, pos).strip_edges(), op, string.substr(pos + op.length())]

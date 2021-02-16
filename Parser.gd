@@ -335,6 +335,11 @@ func parse_statement(line: int, string: String) -> Array:
 			res.push_back(data)
 			print(res[-1])
 			string = ""
+		elif Detector.is_bitwise(string):
+			var bitwise = Utility.split_bitwise(string)
+			res.push_back(["bitwise", parse_statement(line, bitwise[0]),
+				bitwise[1], parse_statement(line, bitwise[2])])
+			string = ""
 		elif Detector.is_comparison(string):
 			var comparison = Utility.split_comparison(string)
 			res.push_back(["comparison", parse_statement(line, comparison[0]),

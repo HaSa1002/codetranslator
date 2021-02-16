@@ -235,7 +235,16 @@ static func is_math(string: String) -> bool:
 	for op in Utility.MATH_OPERATORS:
 		var pos = Utility.find_not_in_string(string, op)
 		if pos != -1:
-			return pos
+			return true
+	return false
+
+
+## Returns true if string contains a bitwise operation
+static func is_bitwise(string: String) -> bool:
+	for op in Utility.BITWISE_OPERATORS:
+		var pos = Utility.find_not_in_string(string, op)
+		if pos != -1:
+			return true
 	return false
 
 
