@@ -198,7 +198,7 @@ func convert_statement(line: int, statement: Array, gsv, lsv, usings, place_semi
 				
 				previous = "method"
 				pass
-			"assignment", "comparison", "math":
+			"assignment", "comparison", "math", "bitwise":
 				result += convert_statement(line, s[1], gsv, lsv, usings, false) + " %s " % s[2] + \
 					convert_statement(line, s[3], gsv, lsv, usings, false)
 				previous = "assignment/comparison"
