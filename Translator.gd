@@ -9,7 +9,7 @@ extends VBoxContainer
 
 
 const GITHUB_URL = "https://github.com/HaSa1002/codetranslator/"
-const VERSION = "0.7-dev (Last Build 2021-01-28 01:30)"
+const VERSION = "0.8-dev (Last Build 2021-02-16 02:13)"
 
 
 export var bug_report_popup : NodePath
