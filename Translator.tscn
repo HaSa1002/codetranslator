@@ -1,9 +1,27 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://Translator.gd" type="Script" id=1]
 [ext_resource path="res://output_btns.tres" type="ButtonGroup" id=2]
+[ext_resource path="res://fonts/noto_sans_ui_bold.tres" type="DynamicFontData" id=3]
+[ext_resource path="res://fonts/noto_sans_ui_regular.tres" type="DynamicFontData" id=4]
+[ext_resource path="res://fonts/hack_regular.tres" type="DynamicFontData" id=5]
 
-[sub_resource type="GDScript" id=1]
+[sub_resource type="DynamicFont" id=3]
+size = 14
+font_data = ExtResource( 4 )
+
+[sub_resource type="Theme" id=4]
+default_font = SubResource( 3 )
+
+[sub_resource type="DynamicFont" id=2]
+size = 14
+font_data = ExtResource( 3 )
+
+[sub_resource type="DynamicFont" id=5]
+size = 14
+font_data = ExtResource( 5 )
+
+[sub_resource type="GDScript" id=6]
 script/source = "extends AcceptDialog
 
 
@@ -14,6 +32,7 @@ func _ready():
 [node name="UI" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+theme = SubResource( 4 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -21,6 +40,10 @@ __meta__ = {
 [node name="Editor" type="VBoxContainer" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
+margin_left = 4.0
+margin_top = 4.0
+margin_right = -4.0
+margin_bottom = -4.0
 script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
@@ -30,11 +53,11 @@ about_popup = NodePath("../AcceptDialog")
 paste_bug = NodePath("../PasteBug")
 
 [node name="Controls" type="HBoxContainer" parent="Editor"]
-margin_right = 1024.0
+margin_right = 1016.0
 margin_bottom = 40.0
 
 [node name="EscapeXML" type="CheckButton" parent="Editor/Controls"]
-margin_right = 155.0
+margin_right = 159.0
 margin_bottom = 40.0
 group = ExtResource( 2 )
 text = "Escape XML"
@@ -56,16 +79,16 @@ group = ExtResource( 2 )
 text = "Output Typeless GDScript"
 
 [node name="CSharp" type="CheckButton" parent="Editor/Controls"]
-margin_left = 159.0
-margin_right = 305.0
+margin_left = 163.0
+margin_right = 313.0
 margin_bottom = 40.0
 pressed = true
 group = ExtResource( 2 )
 text = "Output C#"
 
 [node name="Indention" type="SpinBox" parent="Editor/Controls"]
-margin_left = 309.0
-margin_right = 383.0
+margin_left = 317.0
+margin_right = 391.0
 margin_bottom = 40.0
 max_value = 10.0
 value = 4.0
@@ -80,33 +103,33 @@ group = ExtResource( 2 )
 text = "Be Dumb"
 
 [node name="Regenerate" type="Button" parent="Editor/Controls"]
-margin_left = 387.0
-margin_right = 471.0
+margin_left = 395.0
+margin_right = 485.0
 margin_bottom = 40.0
 text = "Regenerate"
 
 [node name="ReportBug" type="Button" parent="Editor/Controls"]
-margin_left = 475.0
-margin_right = 557.0
+margin_left = 489.0
+margin_right = 577.0
 margin_bottom = 40.0
 text = "Report Bug"
 
 [node name="Paste" type="Button" parent="Editor/Controls"]
-margin_left = 561.0
-margin_right = 699.0
+margin_left = 581.0
+margin_right = 724.0
 margin_bottom = 40.0
 text = "Paste doesn't work?"
 
 [node name="About" type="Button" parent="Editor/Controls"]
-margin_left = 703.0
-margin_right = 753.0
+margin_left = 728.0
+margin_right = 780.0
 margin_bottom = 40.0
 text = "About"
 
 [node name="HSplitContainer" type="HSplitContainer" parent="Editor"]
 margin_top = 44.0
-margin_right = 1024.0
-margin_bottom = 600.0
+margin_right = 1016.0
+margin_bottom = 592.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 split_offset = 447
@@ -115,23 +138,26 @@ __meta__ = {
 }
 
 [node name="Source" type="VBoxContainer" parent="Editor/HSplitContainer"]
-margin_right = 490.0
-margin_bottom = 556.0
+margin_right = 494.0
+margin_bottom = 548.0
 
 [node name="Label" type="Label" parent="Editor/HSplitContainer/Source"]
-margin_right = 490.0
-margin_bottom = 14.0
+margin_right = 494.0
+margin_bottom = 20.0
+custom_fonts/font = SubResource( 2 )
 text = "Source"
 align = 1
 valign = 1
 
 [node name="Source" type="TextEdit" parent="Editor/HSplitContainer/Source"]
-margin_top = 18.0
-margin_right = 490.0
-margin_bottom = 556.0
+margin_top = 24.0
+margin_right = 494.0
+margin_bottom = 548.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-custom_colors/safe_line_number_color = Color( 0.901961, 0, 0, 1 )
+custom_fonts/font = SubResource( 5 )
+custom_colors/safe_line_number_color = Color( 0.921569, 0.580392, 0.2, 1 )
+custom_constants/line_spacing = 6
 text = "class_name Example, \"res://path.png\"
 extends Node
 var aes = AESContext.new()
@@ -183,64 +209,63 @@ caret_blink = true
 caret_blink_speed = 0.5
 
 [node name="VSplitContainer" type="VSplitContainer" parent="Editor/HSplitContainer"]
-margin_left = 502.0
-margin_right = 1024.0
-margin_bottom = 556.0
+margin_left = 506.0
+margin_right = 1016.0
+margin_bottom = 548.0
 split_offset = 300
 
 [node name="Output" type="VBoxContainer" parent="Editor/HSplitContainer/VSplitContainer"]
-margin_right = 522.0
-margin_bottom = 318.0
+margin_right = 510.0
+margin_bottom = 324.0
 
 [node name="Label" type="Label" parent="Editor/HSplitContainer/VSplitContainer/Output"]
-margin_right = 522.0
-margin_bottom = 14.0
+margin_right = 510.0
+margin_bottom = 20.0
+custom_fonts/font = SubResource( 2 )
 text = "Output"
 align = 1
 valign = 1
 
 [node name="Output" type="TextEdit" parent="Editor/HSplitContainer/VSplitContainer/Output"]
-margin_top = 18.0
-margin_right = 522.0
-margin_bottom = 318.0
+margin_top = 24.0
+margin_right = 510.0
+margin_bottom = 324.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
+custom_fonts/font = SubResource( 5 )
+custom_constants/line_spacing = 6
 readonly = true
-highlight_current_line = true
 syntax_highlighting = true
 show_line_numbers = true
 draw_tabs = true
 draw_spaces = true
-highlight_all_occurrences = true
 smooth_scrolling = true
 caret_blink = true
 caret_blink_speed = 0.5
 
 [node name="Warnings" type="VBoxContainer" parent="Editor/HSplitContainer/VSplitContainer"]
-margin_top = 330.0
-margin_right = 522.0
-margin_bottom = 556.0
+margin_top = 336.0
+margin_right = 510.0
+margin_bottom = 548.0
 
 [node name="Label" type="Label" parent="Editor/HSplitContainer/VSplitContainer/Warnings"]
-margin_right = 522.0
-margin_bottom = 14.0
-text = "Warnings:"
+margin_right = 510.0
+margin_bottom = 20.0
+custom_fonts/font = SubResource( 2 )
+text = "Warnings"
 align = 1
 valign = 1
 
 [node name="Warnings" type="TextEdit" parent="Editor/HSplitContainer/VSplitContainer/Warnings"]
-margin_top = 18.0
-margin_right = 522.0
-margin_bottom = 226.0
+margin_top = 24.0
+margin_right = 510.0
+margin_bottom = 212.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
+custom_fonts/font = SubResource( 5 )
+custom_constants/line_spacing = 6
 readonly = true
-highlight_current_line = true
 syntax_highlighting = true
-show_line_numbers = true
-draw_tabs = true
-draw_spaces = true
-highlight_all_occurrences = true
 smooth_scrolling = true
 caret_blink = true
 caret_blink_speed = 0.5
@@ -268,7 +293,7 @@ Developed by Johannes Witt (HaSa1002)
 Source Code is in the Public Domain and available on GitHub
 "
 dialog_autowrap = true
-script = SubResource( 1 )
+script = SubResource( 6 )
 
 [node name="BugReport" type="AcceptDialog" parent="."]
 anchor_left = 0.5

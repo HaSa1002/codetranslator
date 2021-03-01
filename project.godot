@@ -46,6 +46,7 @@ _global_script_class_icons={
 
 config/name="Codetranslator"
 run/main_scene="res://Translator.tscn"
+run/low_processor_mode=true
 config/icon="res://icon.png"
 
 [rendering]
@@ -53,4 +54,5 @@ config/icon="res://icon.png"
 quality/driver/driver_name="GLES2"
 vram_compression/import_etc=true
 vram_compression/import_etc2=false
+environment/default_clear_color=Color( 0.1246, 0.1246, 0.14, 1 )
 environment/default_environment="res://default_env.tres"
