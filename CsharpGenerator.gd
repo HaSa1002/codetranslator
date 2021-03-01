@@ -42,7 +42,7 @@ func convert_for(string: String) -> String:
 	end = details.find("(") - details.find(")")
 	if end <= 0 || details.find(")") == -1:
 		end = -1
-		
+
 	var info := details.substr(details.find("("), end).split(",")
 	var start := 0
 	var increment := 1
@@ -195,7 +195,7 @@ func convert_statement(line: int, statement: Array, gsv, lsv, usings, place_semi
 					result += method
 				else:
 					result += method % arg_str
-				
+
 				previous = "method"
 				pass
 			"assignment", "comparison", "math", "bitwise":
@@ -363,7 +363,7 @@ func generate_csharp(source: String) -> String:
 		var l: String = line.strip_edges()
 		current_line += 1
 		var indent = line.length() - line.strip_edges(true, false).length()
-		
+
 		if collect_file_scope:
 			if indent != 0:
 				collect_file_scope = false
@@ -441,7 +441,7 @@ func generate_csharp(source: String) -> String:
 					output += "?TYPE? "
 				else:
 					output += arg[1] + " "
-				
+
 				if arg[0].empty():
 					warn(current_line, "Expected argument name")
 					output += "?NAME?"
@@ -452,7 +452,7 @@ func generate_csharp(source: String) -> String:
 					else:
 						output += arg[0]
 						local_vars[indent][arg[0]] = [arg[0], arg[1]]
-				
+
 				if arg[2] == null:
 					pass # We ensure below is a String... Hacky tho
 				elif arg[2].empty():

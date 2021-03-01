@@ -300,7 +300,7 @@ func parse_statement(line: int, string: String) -> Array:
 					m[2].push_back(parse_statement(line, s))
 				last_comma = comma + 1
 				comma = get_correct_comma(brace_content, last_comma)
-			
+
 			var s = brace_content.substr(last_comma).strip_edges()
 			if !s.empty():
 				m[2].push_back(parse_statement(line, s))

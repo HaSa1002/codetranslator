@@ -26,7 +26,7 @@ func _ready():
 ## Adds a warning to the warnings TextEdit
 func warn(line : int, what : String):
 	var warns : TextEdit = $HSplitContainer/VSplitContainer/Warnings/Warnings
-	warns.text += "[%d] %s\n" % [line, what]
+	warns.text += "Line %d: %s\n" % [line, what]
 	($HSplitContainer/Source/Source as TextEdit).set_line_as_safe(line - 1, true);
 
 
@@ -81,37 +81,30 @@ func escape_xml(source: String) -> String:
 
 func _on_Source_text_changed():
 	generate_output()
-	pass # Replace with function body.
 
 
 func _on_Regenerate_pressed():
 	generate_output()
-	pass # Replace with function body.
 
 
 func _on_CSharp_toggled(_button_pressed):
 	generate_output()
-	pass # Replace with function body.
 
 
 func _on_Typeless_toggled(_button_pressed):
 	generate_output()
-	pass # Replace with function body.
 
 
 func _on_EscapeXML_toggled(_button_pressed):
 	generate_output()
-	pass # Replace with function body.
 
 
 func _on_GDScript_toggled(_button_pressed):
 	generate_output()
-	pass # Replace with function body.
 
 
 func _on_BeDumb_toggled(_button_pressed):
 	generate_output()
-	pass # Replace with function body.
 
 
 func _on_ReportBug_pressed():
@@ -119,7 +112,7 @@ func _on_ReportBug_pressed():
 	var source = $HSplitContainer/Source/Source.text
 	var output = $HSplitContainer/VSplitContainer/Output/Output.text
 	var warnings = $HSplitContainer/VSplitContainer/Warnings/Warnings.text
-	
+
 	var body = """**Version:** %s
 
 **Description of the problem:**
@@ -171,13 +164,13 @@ func _on_ReportBug_pressed():
 		warnings = warnings.replace(r, replaces[r])
 		source = source.replace(r, replaces[r])
 		output = output.replace(r, replaces[r])
-	
+
 
 	body = (body % [VERSION, source, output, warnings]).replace("\n", "%0A")
 
 	if OS.shell_open(GITHUB_URL + "issues/new?body=%s" % body) != OK:
 		print("There was no browser opend, i guess?")
-	
+
 	# Create and open popup with instructions
 	var brp : AcceptDialog = get_node(bug_report_popup)
 	brp.get_close_button().hide()
@@ -187,7 +180,7 @@ func _on_ReportBug_pressed():
 	var btn_ok = brp.add_button("Browser opend", false, "ok")
 	brp.get_ok().hide()
 	brp.popup_centered()
-	
+
 	# Wait for an answer in the popup
 	var action = yield(brp, "custom_action")
 	if action == "copy":
@@ -197,7 +190,6 @@ func _on_ReportBug_pressed():
 	brp.get_ok().show()
 	brp.hide()
 	brp.dialog_text = t
-	pass # Replace with function body.
 
 func _brp_custom_action(action, link):
 	printt(action, link)
@@ -212,7 +204,6 @@ func _on_Paste_pressed():
 
 func _on_About_pressed():
 	get_node(about_popup).popup_centered()
-	pass # Replace with function body.
 
 
 func _on_Indention_value_changed(_value):
