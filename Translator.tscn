@@ -6,22 +6,22 @@
 [ext_resource path="res://fonts/noto_sans_ui_regular.tres" type="DynamicFontData" id=4]
 [ext_resource path="res://fonts/hack_regular.tres" type="DynamicFontData" id=5]
 
-[sub_resource type="DynamicFont" id=3]
+[sub_resource type="DynamicFont" id=1]
 size = 14
 font_data = ExtResource( 4 )
 
-[sub_resource type="Theme" id=4]
-default_font = SubResource( 3 )
+[sub_resource type="Theme" id=2]
+default_font = SubResource( 1 )
 
-[sub_resource type="DynamicFont" id=2]
+[sub_resource type="DynamicFont" id=3]
 size = 14
 font_data = ExtResource( 3 )
 
-[sub_resource type="DynamicFont" id=5]
+[sub_resource type="DynamicFont" id=4]
 size = 14
 font_data = ExtResource( 5 )
 
-[sub_resource type="GDScript" id=6]
+[sub_resource type="GDScript" id=5]
 script/source = "extends AcceptDialog
 
 
@@ -32,7 +32,7 @@ func _ready():
 [node name="UI" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
-theme = SubResource( 4 )
+theme = SubResource( 2 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -56,73 +56,68 @@ paste_bug = NodePath("../PasteBug")
 margin_right = 1016.0
 margin_bottom = 40.0
 
-[node name="EscapeXML" type="CheckButton" parent="Editor/Controls"]
-margin_right = 159.0
+[node name="CSharp" type="CheckButton" parent="Editor/Controls"]
+margin_right = 150.0
 margin_bottom = 40.0
-group = ExtResource( 2 )
+pressed = true
+text = "Output C#"
+
+[node name="Docs" type="CheckButton" parent="Editor/Controls"]
+margin_left = 154.0
+margin_right = 291.0
+margin_bottom = 40.0
+text = "For Docs"
+
+[node name="EscapeXML" type="CheckButton" parent="Editor/Controls"]
+margin_left = 295.0
+margin_right = 454.0
+margin_bottom = 40.0
 text = "Escape XML"
 
 [node name="GDScript" type="CheckButton" parent="Editor/Controls"]
 visible = false
-margin_left = 159.0
-margin_right = 344.0
+margin_left = 163.0
+margin_right = 354.0
 margin_bottom = 40.0
 group = ExtResource( 2 )
 text = "Output GDScript"
 
-[node name="Typeless" type="CheckButton" parent="Editor/Controls"]
-visible = false
-margin_left = 159.0
-margin_right = 404.0
-margin_bottom = 40.0
-group = ExtResource( 2 )
-text = "Output Typeless GDScript"
-
-[node name="CSharp" type="CheckButton" parent="Editor/Controls"]
-margin_left = 163.0
-margin_right = 313.0
-margin_bottom = 40.0
-pressed = true
-group = ExtResource( 2 )
-text = "Output C#"
-
 [node name="Indention" type="SpinBox" parent="Editor/Controls"]
-margin_left = 317.0
-margin_right = 391.0
+margin_left = 458.0
+margin_right = 532.0
 margin_bottom = 40.0
 max_value = 10.0
-value = 4.0
 suffix = "Tabs"
 
 [node name="BeDumb" type="CheckButton" parent="Editor/Controls"]
 visible = false
-margin_left = 309.0
-margin_right = 449.0
+margin_left = 536.0
+margin_right = 678.0
 margin_bottom = 40.0
 group = ExtResource( 2 )
 text = "Be Dumb"
 
 [node name="Regenerate" type="Button" parent="Editor/Controls"]
-margin_left = 395.0
-margin_right = 485.0
+margin_left = 536.0
+margin_right = 626.0
 margin_bottom = 40.0
 text = "Regenerate"
 
 [node name="ReportBug" type="Button" parent="Editor/Controls"]
-margin_left = 489.0
-margin_right = 577.0
+margin_left = 630.0
+margin_right = 718.0
 margin_bottom = 40.0
 text = "Report Bug"
 
 [node name="Paste" type="Button" parent="Editor/Controls"]
-margin_left = 581.0
-margin_right = 724.0
+margin_left = 722.0
+margin_right = 865.0
 margin_bottom = 40.0
 text = "Paste doesn't work?"
 
 [node name="About" type="Button" parent="Editor/Controls"]
-margin_left = 728.0
-margin_right = 780.0
+margin_left = 869.0
+margin_right = 921.0
 margin_bottom = 40.0
 text = "About"
 
@@ -144,7 +139,7 @@ margin_bottom = 548.0
 [node name="Label" type="Label" parent="Editor/HSplitContainer/Source"]
 margin_right = 494.0
 margin_bottom = 20.0
-custom_fonts/font = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
 text = "Source"
 align = 1
 valign = 1
@@ -155,7 +150,7 @@ margin_right = 494.0
 margin_bottom = 548.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-custom_fonts/font = SubResource( 5 )
+custom_fonts/font = SubResource( 4 )
 custom_colors/safe_line_number_color = Color( 0.921569, 0.580392, 0.2, 1 )
 custom_constants/line_spacing = 6
 text = "class_name Example, \"res://path.png\"
@@ -221,7 +216,7 @@ margin_bottom = 324.0
 [node name="Label" type="Label" parent="Editor/HSplitContainer/VSplitContainer/Output"]
 margin_right = 510.0
 margin_bottom = 20.0
-custom_fonts/font = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
 text = "Output"
 align = 1
 valign = 1
@@ -232,7 +227,7 @@ margin_right = 510.0
 margin_bottom = 324.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-custom_fonts/font = SubResource( 5 )
+custom_fonts/font = SubResource( 4 )
 custom_constants/line_spacing = 6
 readonly = true
 syntax_highlighting = true
@@ -251,7 +246,7 @@ margin_bottom = 548.0
 [node name="Label" type="Label" parent="Editor/HSplitContainer/VSplitContainer/Warnings"]
 margin_right = 510.0
 margin_bottom = 20.0
-custom_fonts/font = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
 text = "Warnings"
 align = 1
 valign = 1
@@ -262,7 +257,7 @@ margin_right = 510.0
 margin_bottom = 212.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-custom_fonts/font = SubResource( 5 )
+custom_fonts/font = SubResource( 4 )
 custom_constants/line_spacing = 6
 readonly = true
 syntax_highlighting = true
@@ -293,7 +288,7 @@ Developed by Johannes Witt (HaSa1002)
 Source Code is in the Public Domain and available on GitHub
 "
 dialog_autowrap = true
-script = SubResource( 6 )
+script = SubResource( 5 )
 
 [node name="BugReport" type="AcceptDialog" parent="."]
 anchor_left = 0.5
@@ -307,7 +302,7 @@ margin_bottom = 126.0
 popup_exclusive = true
 window_title = "Bug Report"
 dialog_text = "The bug reports sometimes don't open correctly.
-Did your browser opend a new tab?
+Did your browser opened a new tab?
 
 If not you can copy the link to the clipboard.
 
@@ -341,12 +336,12 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[connection signal="toggled" from="Editor/Controls/EscapeXML" to="Editor" method="_on_EscapeXML_toggled"]
-[connection signal="toggled" from="Editor/Controls/GDScript" to="Editor" method="_on_GDScript_toggled"]
-[connection signal="toggled" from="Editor/Controls/Typeless" to="Editor" method="_on_Typeless_toggled"]
-[connection signal="toggled" from="Editor/Controls/CSharp" to="Editor" method="_on_CSharp_toggled"]
+[connection signal="toggled" from="Editor/Controls/CSharp" to="Editor" method="_on_Control_Button_toggled"]
+[connection signal="toggled" from="Editor/Controls/Docs" to="Editor" method="_on_Control_Button_toggled"]
+[connection signal="toggled" from="Editor/Controls/EscapeXML" to="Editor" method="_on_Control_Button_toggled"]
+[connection signal="toggled" from="Editor/Controls/GDScript" to="Editor" method="_on_Control_Button_toggled"]
 [connection signal="value_changed" from="Editor/Controls/Indention" to="Editor" method="_on_Indention_value_changed"]
-[connection signal="toggled" from="Editor/Controls/BeDumb" to="Editor" method="_on_BeDumb_toggled"]
+[connection signal="toggled" from="Editor/Controls/BeDumb" to="Editor" method="_on_Control_Button_toggled"]
 [connection signal="pressed" from="Editor/Controls/Regenerate" to="Editor" method="_on_Regenerate_pressed"]
 [connection signal="pressed" from="Editor/Controls/ReportBug" to="Editor" method="_on_ReportBug_pressed"]
 [connection signal="pressed" from="Editor/Controls/Paste" to="Editor" method="_on_Paste_pressed"]

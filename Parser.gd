@@ -1,6 +1,12 @@
 class_name Parser
 extends Object
 
+##
+## This file contains GDScript parsing functions
+## Developed by Johannes Witt and Hugo Locurcio
+## Placed into the Public Domain
+##
+
 signal warning_generated(line, string)
 
 

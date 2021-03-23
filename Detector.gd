@@ -1,6 +1,13 @@
 class_name Detector
 extends Object
 
+##
+## This file contains GDScript detection functions
+## Developed by Johannes Witt and Hugo Locurcio
+## Placed into the Public Domain
+##
+
+
 ### 				Detectors 				  ###
 # Detectors are only meant to return a bool,	#
 # depending on the detected content.			#

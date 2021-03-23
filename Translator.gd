@@ -2,8 +2,8 @@ class_name Translator
 extends VBoxContainer
 
 ##
-## This file contains the translator functions and callbacks for the app
-## Developed by Johannes Witt
+## This file contains callbacks for the app
+## Developed by Johannes Witt and Hugo Locurcio
 ## Placed into the Public Domain
 ##
 
@@ -48,10 +48,15 @@ func generate_output():
 		var generator := CsharpGenerator.new();
 		var err = generator.connect("warning_generated", self, "warn")
 		assert(err == OK) # Fix the signal above
+		output = generator.generate_csharp(source)
+	
+	if $Controls/Docs.pressed:
 		output = "[codeblocks]\n[gdscript]\n%s\n[/gdscript]\n[csharp]\n%s\n[/csharp]\n[/codeblocks]" % \
-			[source, generator.generate_csharp(source)]
+			[source, output]
+	
 	if $Controls/EscapeXML.pressed:
-		output = escape_xml(source)
+		output = escape_xml(output)
+	
 	var tabs := int($Controls/Indention.value)
 	if tabs > 0:
 		var tabbed_output := ""
@@ -87,23 +92,7 @@ func _on_Regenerate_pressed():
 	generate_output()
 
 
-func _on_CSharp_toggled(_button_pressed):
-	generate_output()
-
-
-func _on_Typeless_toggled(_button_pressed):
-	generate_output()
-
-
-func _on_EscapeXML_toggled(_button_pressed):
-	generate_output()
-
-
-func _on_GDScript_toggled(_button_pressed):
-	generate_output()
-
-
-func _on_BeDumb_toggled(_button_pressed):
+func _on_Control_Button_toggled(_button_pressed: bool) -> void:
 	generate_output()
 
 
