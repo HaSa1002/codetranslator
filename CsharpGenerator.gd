@@ -1,6 +1,12 @@
 class_name CsharpGenerator
 extends Node
 
+##
+## This file contains c# generation functions
+## Developed by Johannes Witt and Hugo Locurcio
+## Placed into the Public Domain
+##
+
 signal warning_generated(line, string)
 
 var parser := Parser.new()

@@ -2,8 +2,8 @@ class_name Utility
 extends Object
 
 ##
-## This file contains the translator constans
-## Developed by Johannes Witt
+## This file contains the translator constants
+## Developed by Johannes Witt and Hugo Locurcio
 ## Placed into the Public Domain
 ##
 
